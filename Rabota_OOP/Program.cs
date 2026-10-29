@@ -7,7 +7,7 @@ namespace classiki
     {
         static void Main(string[] args)
         {
-            ProfilleAdd profileService = new ProfilleAdd();
+            ProfileAdd profileService = new ProfileAdd();
 
             
             List<Channel> channels = new List<Channel>

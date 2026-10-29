@@ -4,7 +4,7 @@ using System.Linq;
 
 namespace classiki
 {
-    public class ProfilleAdd
+    public class ProfileAdd
     {
         public UserProfile CreateProfile(User user)
         {
