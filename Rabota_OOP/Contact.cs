@@ -1,3 +1,4 @@
+using System;
 using System.Threading;
 
 namespace classiki
@@ -5,25 +6,24 @@ namespace classiki
     public class Contact
     {
         private static int _contactId = 0;
-        private int _chanelId;
-        private string _value;
 
-        public int ChanelID
-        {
-            get => _chanelId; set => _chanelId = value;
-        }
-        public string Value
-        {
-            get => _value; set => _value = value;
-        }
+        public int ChannelID { get; }
+        public string Value { get; }
         public int ContactId { get; }
 
-        public Contact(int contactId, string value, int chanelID)
+        public Contact(string value, int channelID)
         {
-            ChanelID = chanelID;
-            Value = value;
+            if (string.IsNullOrWhiteSpace(value))
+                throw new ArgumentException("Значение контакта не может быть пустым.", nameof(value));
+
+            if (channelID <= 0)
+                throw new ArgumentOutOfRangeException(
+                    nameof(channelID),
+                    "Идентификатор канала должен быть положительным.");
+
+            ChannelID = channelID;
+            Value = value.Trim();
             ContactId = Interlocked.Increment(ref _contactId);
         }
-
     }
 }

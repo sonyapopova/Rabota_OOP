@@ -21,9 +21,9 @@ namespace classiki
             UserProfile studentProfile = profileService.CreateProfile(student);
 
             
-            Contact phoneContact = new Contact(0, "+88005553555", channels[0].ID);
-            Contact emailContact = new Contact(0, "akakii@gmail.com", channels[1].ID);
-            Contact tgContact = new Contact(0, "@a_kak_tg", channels[2].ID);
+            Contact phoneContact = new Contact("+88005553555", channels[0].ID);
+            Contact emailContact = new Contact("akakii@gmail.com", channels[1].ID);
+            Contact tgContact = new Contact("@a_kak_tg", channels[2].ID);
 
             profileService.AddContactToProfile(studentProfile, phoneContact);
             profileService.AddContactToProfile(studentProfile, emailContact);

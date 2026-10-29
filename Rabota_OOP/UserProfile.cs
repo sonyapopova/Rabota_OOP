@@ -1,10 +1,12 @@
 using System;
 using System.Collections.Generic;
+using System.Linq;
 
 namespace classiki
 {
     public class UserProfile
     {
+        private readonly List<Contact> _contacts = new List<Contact>();
 
         //Рома ОТСЮДА
         private double bonusBalance = 0.0;
@@ -60,8 +62,8 @@ namespace classiki
         }
 
         //Совершённые покупки
-        public List<ProductItem> Purchases { get; set; } =
-            new List<ProductItem>();
+        private readonly List<ProductItem> _purchases = new List<ProductItem>();
+        public IReadOnlyList<ProductItem> Purchases => _purchases;
         //Рома ДО СЮДА
 
         //Начинается. НЕ МОЯ (Ромы) ЧАСТЬ РАБОТЫ, НО БЕЗ ЭТОГО МОЯ НЕ РАБОТАЕТ. 
@@ -82,14 +84,60 @@ namespace classiki
         }
         //Заканчивается. НЕ МОЯ (Ромы) ЧАСТЬ РАБОТЫ, НО БЕЗ ЭТОГО МОЯ НЕ РАБОТАЕТ. 
 
-        public User User { get; set; }
-        public List<Contact> Contacts { get; set; } = new List<Contact>();
+        public User User { get; }
+        public IReadOnlyList<Contact> Contacts => _contacts;
 
         //в качестве демонтрации прочих свойств мы решили добавить дату создания профиля (прим. Попова София)
-        public DateTime CreatedAt { get; set; } = DateTime.Now;
+        public DateTime CreatedAt { get; } = DateTime.Now;
+
         public UserProfile(User user)
         {
-            User = user;
+            User = user ?? throw new ArgumentNullException(nameof(user));
+        }
+
+        public void AddContact(Contact contact)
+        {
+            if (contact == null)
+                throw new ArgumentNullException(nameof(contact));
+
+            if (_contacts.Any(c => c.ContactId == contact.ContactId))
+                throw new InvalidOperationException(
+                    $"Контакт с ID {contact.ContactId} уже добавлен в профиль.");
+
+            _contacts.Add(contact);
+        }
+
+        public bool RemoveContact(int contactId)
+        {
+            var contact = _contacts.FirstOrDefault(c => c.ContactId == contactId);
+            if (contact == null)
+                return false;
+
+            return _contacts.Remove(contact);
+        }
+
+        public void AddPurchase(ProductItem product)
+        {
+            if (product == null)
+                throw new ArgumentNullException(nameof(product));
+
+            _purchases.Add(product);
+        }
+
+        /// <summary>
+        /// Деконструкция профиля: ФИО, логин, количество контактов, денежный и бонусный балансы.
+        /// </summary>
+        public void Deconstruct(
+            out string fullName,
+            out string login,
+            out int contactsCount,
+            out decimal moneyBalance,
+            out double bonusBalance)
+        {
+            (fullName, login) = User;
+            contactsCount = _contacts.Count;
+            moneyBalance = MoneyBalance;
+            bonusBalance = BonusBalance;
         }
     }
 }

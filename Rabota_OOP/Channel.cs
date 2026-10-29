@@ -1,3 +1,6 @@
+using System;
+using System.Threading;
+
 namespace classiki
 {
     public class Channel
@@ -5,13 +8,15 @@ namespace classiki
         private static int _channelId = 0;
 
         public int ID { get; }
-        public string Name { get; set; }
+        public string Name { get; }
 
         public Channel(string name)
         {
-            _channelId++;
-            ID = _channelId;
-            Name = name;
+            if (string.IsNullOrWhiteSpace(name))
+                throw new ArgumentException("Название канала не может быть пустым.", nameof(name));
+
+            ID = Interlocked.Increment(ref _channelId);
+            Name = name.Trim();
         }
     }
 }

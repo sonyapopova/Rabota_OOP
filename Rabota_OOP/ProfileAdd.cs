@@ -61,7 +61,7 @@ namespace classiki
             profile.BonusBalance -= (double)bonusPayment;
 
             //Добавляем покупку в историю
-            profile.Purchases.Add(product);
+            profile.AddPurchase(product);
 
             message =
                 $"Покупка успешно оплачена!\n" +
@@ -76,37 +76,50 @@ namespace classiki
 
         public UserProfile CreateProfile(User user)
         {
+            if (user == null)
+                throw new ArgumentNullException(nameof(user));
+
             return new UserProfile(user);
         }
 
         public void AddContactToProfile(UserProfile profile, Contact contact)
         {
-            profile.Contacts.Add(contact);
+            if (profile == null)
+                throw new ArgumentNullException(nameof(profile));
+
+            if (contact == null)
+                throw new ArgumentNullException(nameof(contact));
+
+            profile.AddContact(contact);
         }
 
         public bool RemoveContactFromProfile(UserProfile profile, int contactId)
         {
-            var contact = profile.Contacts.FirstOrDefault(c => c.ContactId == contactId);
-            if (contact != null)
-            {
-                profile.Contacts.Remove(contact);
-                return true;
-            }
-            return false;
+            if (profile == null)
+                throw new ArgumentNullException(nameof(profile));
+
+            return profile.RemoveContact(contactId);
         }
 
         public void PrintProfileSummary(UserProfile profile, List<Channel> activeChannels)
         {
-            var (shortName, userLogin) = profile.User;
+            if (profile == null)
+                throw new ArgumentNullException(nameof(profile));
+
+            if (activeChannels == null)
+                throw new ArgumentNullException(nameof(activeChannels));
+
+            var (shortName, userLogin, contactsCount, moneyBalance, bonusBalance) = profile;
 
             Console.WriteLine($"\nСоздан новый профиль: (ID: {profile.User.UserId})");
             Console.WriteLine($"Пользователь: {shortName} | Логин: {userLogin}");
             Console.WriteLine($"Профиль создан: {profile.CreatedAt}");
-            Console.WriteLine($"Всего контактов: {profile.Contacts.Count}");
+            Console.WriteLine($"Баланс: {moneyBalance:F2} УЕ | Бонусы: {bonusBalance:F2}");
+            Console.WriteLine($"Всего контактов: {contactsCount}");
 
             foreach (var contact in profile.Contacts)
             { 
-                var channelName = activeChannels.FirstOrDefault(c => c.ID == contact.ChanelID)?.Name ?? "Неизвестный канал";
+                var channelName = activeChannels.FirstOrDefault(c => c.ID == contact.ChannelID)?.Name ?? "Неизвестный канал";
                 Console.WriteLine($"  -> [Контакт ID: {contact.ContactId}] {channelName}: {contact.Value}");
             }
             
