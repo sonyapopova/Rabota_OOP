@@ -38,12 +38,17 @@ namespace classiki
 
             Console.WriteLine("\n--- Корзина и оплата ---");
 
-            Cart cart = new Cart();
-            cart.Add(new CartItem(new Product("Ноутбук", 1000m), 1));
-            cart.Add(new CartItem(new Product("Мышь", 50m), 2));
+            Cart cart = new Cart(1, student.UserId);
+            cart.Add(new CartItem(1, new Product(1, "Ноутбук", 1000m), 1));
+            cart.Add(new CartItem(2, new Product(2, "Мышь", 50m), 2));
 
-            cart.ShowDiscountAmount();
-            decimal total = cart.ShowFinalPrice();
+            CartPrice price = cart.Calculate(0.8m);
+
+            Console.WriteLine($"Исходная цена: {price.OriginalPrice} УЕ");
+            Console.WriteLine($"Скидка: {price.DiscountAmount} УЕ");
+
+            decimal total = price.OriginalPrice - price.DiscountAmount;
+            Console.WriteLine($"Итог: {total} УЕ");
 
             BuyerBalance buyer = new BuyerBalance(500m, 2000m);
             PaymentService paymentService = new PaymentService();

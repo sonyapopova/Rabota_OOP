@@ -68,8 +68,8 @@ namespace classiki
 
         //Начинается. НЕ МОЯ (Ромы) ЧАСТЬ РАБОТЫ, НО БЕЗ ЭТОГО МОЯ НЕ РАБОТАЕТ. 
         //Баланс денег. 
-        private decimal moneyBalance = 0m;
-        public decimal MoneyBalance
+        private double moneyBalance = 0.0;
+        public double MoneyBalance
         {
             get => moneyBalance;
             set
@@ -131,7 +131,7 @@ namespace classiki
             out string fullName,
             out string login,
             out int contactsCount,
-            out decimal moneyBalance,
+            out double moneyBalance,
             out double bonusBalance)
         {
             (fullName, login) = User;
