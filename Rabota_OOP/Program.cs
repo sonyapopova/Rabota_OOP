@@ -36,6 +36,21 @@ namespace classiki
 
             profileService.PrintProfileSummary(studentProfile, channels);
 
+            Console.WriteLine("\n--- Корзина и оплата ---");
+
+            Cart cart = new Cart();
+            cart.Add(new CartItem(new Product("Ноутбук", 1000m), 1));
+            cart.Add(new CartItem(new Product("Мышь", 50m), 2));
+
+            cart.ShowDiscountAmount();
+            decimal total = cart.ShowFinalPrice();
+
+            BuyerBalance buyer = new BuyerBalance(500m, 2000m);
+            PaymentService paymentService = new PaymentService();
+            bool paid = paymentService.Pay(buyer, total);
+
+            Console.WriteLine($"Оплата прошла: {paid}");
+            Console.WriteLine($"Остаток бонусов: {buyer.Bonuses} УЕ, денег: {buyer.Money} УЕ");
         }
     }
 }
