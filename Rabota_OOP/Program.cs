@@ -36,7 +36,7 @@ namespace classiki
 
             profileService.PrintProfileSummary(studentProfile, channels);
 
-            Console.WriteLine("\n--- Корзина и оплата ---");
+            Console.WriteLine("\n=== Сценарий 1: успешная оплата ===");
 
             Cart cart = new Cart();
             cart.Add(new ProductItem("Ноутбук", 1000, 1));
@@ -52,6 +52,34 @@ namespace classiki
 
             bool paid = profileService.PayForPurchase(studentProfile, cart, out string paymentMessage);
             Console.WriteLine(paymentMessage);
+            Console.WriteLine($"Состояние корзины после оплаты: товаров {cart.PositionsCount}, итоговая цена {cart.TotalPrice:F2} УЕ");
+
+            profileService.PrintProfileSummary(studentProfile, channels);
+
+            Console.WriteLine("\n=== Сценарий 2: оплата невозможна, затем пополнение и повтор ===");
+
+            Cart expensiveCart = new Cart();
+            expensiveCart.Add(new ProductItem("Телевизор", 50000, 1));
+
+            Console.WriteLine($"Корзина: товаров {expensiveCart.PositionsCount}, итоговая цена {expensiveCart.TotalPrice:F2} УЕ");
+            Console.WriteLine($"Денег на балансе: {studentProfile.MoneyBalance:F2} УЕ, бонусов: {studentProfile.BonusBalance:F2}");
+
+            bool failed = profileService.PayForPurchase(studentProfile, expensiveCart, out string failedMessage);
+            Console.WriteLine($"Результат оплаты: {failed}");
+            Console.WriteLine(failedMessage);
+            Console.WriteLine($"Корзина не изменилась: товаров {expensiveCart.PositionsCount}, итоговая цена {expensiveCart.TotalPrice:F2} УЕ");
+            Console.WriteLine($"Баланс не изменился: денег {studentProfile.MoneyBalance:F2} УЕ, бонусов {studentProfile.BonusBalance:F2}");
+
+            decimal needMoney = profileService.CalculateMoneyPayment(studentProfile, expensiveCart);
+            decimal missingMoney = needMoney - studentProfile.MoneyBalance;
+            Console.WriteLine($"\nПополняем на недостающую сумму: {missingMoney:F2} УЕ");
+            profileService.TopUpBalance(studentProfile, missingMoney);
+            Console.WriteLine($"После пополнения: денег {studentProfile.MoneyBalance:F2} УЕ, бонусов {studentProfile.BonusBalance:F2}");
+
+            bool paidAfterTopUp = profileService.PayForPurchase(studentProfile, expensiveCart, out string successMessage);
+            Console.WriteLine($"Результат оплаты: {paidAfterTopUp}");
+            Console.WriteLine(successMessage);
+            Console.WriteLine($"Корзина после оплаты: товаров {expensiveCart.PositionsCount}, итоговая цена {expensiveCart.TotalPrice:F2} УЕ");
 
             profileService.PrintProfileSummary(studentProfile, channels);
         }

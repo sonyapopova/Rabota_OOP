@@ -16,6 +16,8 @@ namespace classiki
 
         public int PositionsCount => _items.Count;
 
+        public bool IsEmpty => _items.Count == 0;
+
         public decimal TotalPrice => _items.Sum(item => (decimal)item.TotalPrice);
 
         public void Add(ProductItem item)

@@ -44,10 +44,75 @@ namespace classiki
             if (cart == null)
                 throw new ArgumentNullException(nameof(cart));
 
-            if (cart.PositionsCount == 0)
+            if (cart.IsEmpty)
                 throw new InvalidOperationException("Корзина пуста: нечего оплачивать.");
 
             //Рассчитываем стоимость товаров с учётом скидки
+            PaymentQuote quote = CalculatePayment(profile, cart);
+            int positionsCount = cart.PositionsCount;
+
+            // Проверяем достаточность денежных средств.
+            // При нехватке средств корзина и балансы остаются без изменений.
+            if (profile.MoneyBalance < quote.MoneyPayment)
+            {
+                decimal missing = quote.MoneyPayment - profile.MoneyBalance;
+
+                message =
+                    "Недостаточно денежных средств для оплаты покупки.\n" +
+                    $"Требуется деньгами: {quote.MoneyPayment:F2} УЕ\n" +
+                    $"На балансе: {profile.MoneyBalance:F2} УЕ\n" +
+                    $"Не хватает: {missing:F2} УЕ\n" +
+                    "Корзина и баланс не изменены.";
+
+                return false;
+            }
+
+            //Списываем денежные средства
+            profile.MoneyBalance -= quote.MoneyPayment;
+
+            //Списываем использованные бонусы
+            profile.BonusBalance -= (double)quote.BonusPayment;
+
+            //Добавляем покупки в историю
+            foreach (var item in cart.Items)
+                profile.AddPurchase(item);
+
+            //Опустошаем корзину: оплаченные позиции в ней больше не нужны
+            cart.Clear();
+
+            message =
+                $"Покупка успешно оплачена!\n" +
+                $"Позиций оплачено: {positionsCount}\n" +
+                $"Стоимость до скидки: {quote.OriginalPrice:F2} УЕ\n" +
+                $"Стоимость со скидкой: {quote.DiscountedPrice:F2} УЕ\n" +
+                $"Оплачено бонусами: {quote.BonusPayment:F2}\n" +
+                $"Оплачено деньгами: {quote.MoneyPayment:F2} УЕ\n" +
+                $"Корзина очищена: товаров {cart.PositionsCount}, итоговая цена {cart.TotalPrice:F2} УЕ";
+
+            return true;
+        }
+
+        /// <summary>
+        /// Сколько денег нужно доплатить за корзину при текущем балансе бонусов
+        /// (без учёта возможного пополнения).
+        /// </summary>
+        public decimal CalculateMoneyPayment(UserProfile profile, Cart cart)
+        {
+            if (profile == null)
+                throw new ArgumentNullException(nameof(profile));
+
+            if (cart == null)
+                throw new ArgumentNullException(nameof(cart));
+
+            if (cart.IsEmpty)
+                throw new InvalidOperationException("Корзина пуста: нечего оплачивать.");
+
+            return CalculatePayment(profile, cart).MoneyPayment;
+        }
+
+        private static PaymentQuote CalculatePayment(UserProfile profile, Cart cart)
+        {
+            //Стоимость товаров до скидки
             decimal originalPrice = cart.TotalPrice;
 
             decimal discountedPrice = Math.Round(originalPrice * (decimal)profile.PersonalDiscount, 2);
@@ -61,33 +126,14 @@ namespace classiki
             //Сумма, которую необходимо оплатить деньгами
             decimal moneyPayment = discountedPrice - bonusPayment;
 
-            // Проверяем достаточность денежных средств
-            if (profile.MoneyBalance < moneyPayment)
-            {
-                message = "Недостаточно денежных средств для оплаты покупки.";
-                return false;
-            }
-
-            //Списываем денежные средства
-            profile.MoneyBalance -= moneyPayment;
-
-            //Списываем использованные бонусы
-            profile.BonusBalance -= (double)bonusPayment;
-
-            //Добавляем покупки в историю
-            foreach (var item in cart.Items)
-                profile.AddPurchase(item);
-
-            message =
-                $"Покупка успешно оплачена!\n" +
-                $"Позиций в корзине: {cart.PositionsCount}\n" +
-                $"Стоимость до скидки: {originalPrice:F2} УЕ\n" +
-                $"Стоимость со скидкой: {discountedPrice:F2} УЕ\n" +
-                $"Оплачено бонусами: {bonusPayment:F2}\n" +
-                $"Оплачено деньгами: {moneyPayment:F2} УЕ";
-
-            return true;
+            return new PaymentQuote(originalPrice, discountedPrice, bonusPayment, moneyPayment);
         }
+
+        private readonly record struct PaymentQuote(
+            decimal OriginalPrice,
+            decimal DiscountedPrice,
+            decimal BonusPayment,
+            decimal MoneyPayment);
         //Рома ДО СЮДА
 
         public UserProfile CreateProfile(User user)
