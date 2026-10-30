@@ -18,24 +18,41 @@ namespace classiki
 
         public bool IsEmpty => _items.Count == 0;
 
-        public decimal TotalPrice => _items.Sum(item => (decimal)item.TotalPrice);
+        public decimal TotalPrice => RecalculateTotal();
 
         public void Add(ProductItem item)
         {
-            if (item == null)
-                throw new ArgumentNullException(nameof(item));
+            ValidateItem(item);
 
             _items.Add(item);
         }
 
         public bool Remove(ProductItem item)
         {
-            if (item == null)
-                throw new ArgumentNullException(nameof(item));
+            ValidateItem(item);
 
             return _items.Remove(item);
         }
 
         public void Clear() => _items.Clear();
+
+        /// <summary>
+        /// Рассчитывает цену корзины с учётом множителя скидки.
+        /// </summary>
+        public CartPrice Calculate(decimal discountMultiplier)
+        {
+            return new CartPrice(RecalculateTotal(), discountMultiplier);
+        }
+
+        private decimal RecalculateTotal()
+        {
+            return _items.Sum(item => (decimal)item.TotalPrice);
+        }
+
+        private static void ValidateItem(ProductItem item)
+        {
+            if (item == null)
+                throw new ArgumentNullException(nameof(item));
+        }
     }
 }

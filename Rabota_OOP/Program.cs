@@ -53,6 +53,8 @@ namespace classiki
             bool paid = profileService.PayForPurchase(studentProfile, cart, out string paymentMessage);
             Console.WriteLine(paymentMessage);
             Console.WriteLine($"Состояние корзины после оплаты: товаров {cart.PositionsCount}, итоговая цена {cart.TotalPrice:F2} котокоинов");
+            Console.WriteLine($"Проверка корзины: товаров {cart.PositionsCount}, TotalPrice = {cart.TotalPrice:F2} — " +
+                $"{(cart.IsEmpty && cart.TotalPrice == 0m ? "корзина пуста" : "корзина не пуста")}");
 
             profileService.PrintProfileSummary(studentProfile, channels);
 
@@ -80,6 +82,8 @@ namespace classiki
             Console.WriteLine($"Результат оплаты: {paidAfterTopUp}");
             Console.WriteLine(successMessage);
             Console.WriteLine($"Корзина после оплаты: товаров {expensiveCart.PositionsCount}, итоговая цена {expensiveCart.TotalPrice:F2} котокоинов");
+            Console.WriteLine($"Проверка корзины: товаров {expensiveCart.PositionsCount}, TotalPrice = {expensiveCart.TotalPrice:F2} — " +
+                $"{(expensiveCart.IsEmpty && expensiveCart.TotalPrice == 0m ? "корзина пуста" : "корзина не пуста")}");
 
             profileService.PrintProfileSummary(studentProfile, channels);
         }

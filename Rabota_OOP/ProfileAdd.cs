@@ -47,49 +47,10 @@ namespace classiki
             if (cart.IsEmpty)
                 throw new InvalidOperationException("Корзина пуста: нечего оплачивать.");
 
-            //Рассчитываем стоимость товаров с учётом скидки
-            PaymentQuote quote = CalculatePayment(profile, cart);
-            int positionsCount = cart.PositionsCount;
+            //Корзина сама считает цену с учётом персональной скидки профиля
+            CartPrice price = cart.Calculate((decimal)profile.PersonalDiscount);
 
-            // Проверяем достаточность денежных средств.
-            // При нехватке средств корзина и балансы остаются без изменений.
-            if (profile.MoneyBalance < quote.MoneyPayment)
-            {
-                decimal missing = quote.MoneyPayment - profile.MoneyBalance;
-
-                message =
-                    "Недостаточно денежных средств для оплаты покупки.\n" +
-                    $"Требуется деньгами: {quote.MoneyPayment:F2} котокоинов\n" +
-                    $"На балансе: {profile.MoneyBalance:F2} котокоинов\n" +
-                    $"Не хватает: {missing:F2} котокоинов\n" +
-                    "Корзина и баланс не изменены.";
-
-                return false;
-            }
-
-            //Списываем денежные средства
-            profile.MoneyBalance -= quote.MoneyPayment;
-
-            //Списываем использованные бонусы
-            profile.BonusBalance -= (double)quote.BonusPayment;
-
-            //Добавляем покупки в историю
-            foreach (var item in cart.Items)
-                profile.AddPurchase(item);
-
-            //Опустошаем корзину: оплаченные позиции в ней больше не нужны
-            cart.Clear();
-
-            message =
-                $"Покупка успешно оплачена!\n" +
-                $"Позиций оплачено: {positionsCount}\n" +
-                $"Стоимость до скидки: {quote.OriginalPrice:F2} котокоинов\n" +
-                $"Стоимость со скидкой: {quote.DiscountedPrice:F2} котокоинов\n" +
-                $"Оплачено бонусами: {quote.BonusPayment:F2}\n" +
-                $"Оплачено деньгами: {quote.MoneyPayment:F2} котокоинов\n" +
-                $"Корзина очищена: товаров {cart.PositionsCount}, итоговая цена {cart.TotalPrice:F2} котокоинов";
-
-            return true;
+            return TryPay(profile, cart, price, out message);
         }
 
         /// <summary>
@@ -107,33 +68,107 @@ namespace classiki
             if (cart.IsEmpty)
                 throw new InvalidOperationException("Корзина пуста: нечего оплачивать.");
 
-            return CalculatePayment(profile, cart).MoneyPayment;
+            CartPrice price = cart.Calculate((decimal)profile.PersonalDiscount);
+            BuyerBalanceState balance = CreateBalanceState(profile);
+
+            return CalculateMoneyPayment(price, balance);
         }
 
-        private static PaymentQuote CalculatePayment(UserProfile profile, Cart cart)
+        //Рома: расчёт оплаты бонусами и деньгами
+        private static decimal CalculateBonusPayment(CartPrice price, BuyerBalanceState balance)
         {
-            //Стоимость товаров до скидки
-            decimal originalPrice = cart.TotalPrice;
-
-            decimal discountedPrice = Math.Round(originalPrice * (decimal)profile.PersonalDiscount, 2);
-
             //Максимальная сумма, которую разрешено оплатить бонусами
-            decimal maxBonusPayment = Math.Floor(discountedPrice * (decimal)profile.BonusPaymentLimit);
+            decimal maxBonusPayment = Math.Floor(
+                price.FinalPrice * (decimal)balance.BonusPaymentShareMultiplier);
 
             //Фактическая сумма оплаты бонусами
-            decimal bonusPayment = Math.Min(maxBonusPayment, (decimal)profile.BonusBalance);
-
-            //Сумма, которую необходимо оплатить деньгами
-            decimal moneyPayment = discountedPrice - bonusPayment;
-
-            return new PaymentQuote(originalPrice, discountedPrice, bonusPayment, moneyPayment);
+            return Math.Min(maxBonusPayment, (decimal)balance.Bonuses);
         }
 
-        private readonly record struct PaymentQuote(
-            decimal OriginalPrice,
-            decimal DiscountedPrice,
-            decimal BonusPayment,
-            decimal MoneyPayment);
+        private static decimal CalculateMoneyPayment(CartPrice price, BuyerBalanceState balance)
+        {
+            //Сумма, которую необходимо оплатить деньгами
+            return price.FinalPrice - CalculateBonusPayment(price, balance);
+        }
+
+        //Соня: проведение оплаты и формирование сообщения
+        private static bool TryPay(UserProfile profile, Cart cart, CartPrice price, out string message)
+        {
+            BuyerBalanceState balance = CreateBalanceState(profile);
+
+            decimal bonusPayment = CalculateBonusPayment(price, balance);
+            decimal moneyPayment = CalculateMoneyPayment(price, balance);
+            int positionsCount = cart.PositionsCount;
+
+            // Проверяем достаточность денежных средств.
+            // При нехватке средств корзина и балансы остаются без изменений.
+            if (balance.Money < moneyPayment)
+            {
+                decimal missing = moneyPayment - balance.Money;
+
+                message = BuildPaymentMessage(
+                    profile, cart, price, bonusPayment, moneyPayment, missing, false, positionsCount);
+
+                return false;
+            }
+
+            //Списываем денежные средства
+            profile.MoneyBalance = balance.Money - moneyPayment;
+
+            //Списываем использованные бонусы
+            profile.BonusBalance = balance.Bonuses - (double)bonusPayment;
+
+            //Добавляем покупки в историю
+            foreach (var item in cart.Items)
+                profile.AddPurchase(item);
+
+            //Опустошаем корзину: оплаченные позиции в ней больше не нужны
+            cart.Clear();
+
+            message = BuildPaymentMessage(
+                profile, cart, price, bonusPayment, moneyPayment, 0m, true, positionsCount);
+
+            return true;
+        }
+
+        private static string BuildPaymentMessage(
+            UserProfile profile,
+            Cart cart,
+            CartPrice price,
+            decimal bonusPayment,
+            decimal moneyPayment,
+            decimal missing,
+            bool success,
+            int positionsCount)
+        {
+            if (!success)
+            {
+                return
+                    "Недостаточно денежных средств для оплаты покупки.\n" +
+                    $"Требуется деньгами: {moneyPayment:F2} котокоинов\n" +
+                    $"На балансе: {profile.MoneyBalance:F2} котокоинов\n" +
+                    $"Не хватает: {missing:F2} котокоинов\n" +
+                    "Корзина и баланс не изменены.";
+            }
+
+            return
+                "Покупка успешно оплачена!\n" +
+                $"Позиций оплачено: {positionsCount}\n" +
+                $"Стоимость до скидки: {price.OriginalPrice:F2} котокоинов\n" +
+                $"Размер скидки: {price.DiscountAmount:F2} котокоинов\n" +
+                $"Стоимость со скидкой: {price.FinalPrice:F2} котокоинов\n" +
+                $"Оплачено бонусами: {bonusPayment:F2}\n" +
+                $"Оплачено деньгами: {moneyPayment:F2} котокоинов\n" +
+                $"Корзина очищена: товаров {cart.PositionsCount}, итоговая цена {cart.TotalPrice:F2} котокоинов";
+        }
+
+        private static BuyerBalanceState CreateBalanceState(UserProfile profile)
+        {
+            return new BuyerBalanceState(
+                profile.BonusBalance,
+                profile.MoneyBalance,
+                profile.BonusPaymentLimit);
+        }
         //Рома ДО СЮДА
 
         public UserProfile CreateProfile(User user)
