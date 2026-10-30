@@ -39,18 +39,21 @@ namespace classiki
             Console.WriteLine("\n--- Корзина и оплата ---");
 
             Cart cart = new Cart();
-            cart.Add(new CartItem(new Product("Ноутбук", 1000m), 1));
-            cart.Add(new CartItem(new Product("Мышь", 50m), 2));
+            cart.Add(new ProductItem("Ноутбук", 1000, 1));
+            cart.Add(new ProductItem("Мышь", 50, 2));
 
-            cart.ShowDiscountAmount();
-            decimal total = cart.ShowFinalPrice();
+            Console.WriteLine($"Позиций в корзине: {cart.PositionsCount}, сумма: {cart.TotalPrice:F2} УЕ");
 
-            BuyerBalance buyer = new BuyerBalance(500m, 2000m);
-            PaymentService paymentService = new PaymentService();
-            bool paid = paymentService.Pay(buyer, total);
+            studentProfile.PersonalDiscount = 0.90;
+            studentProfile.BonusPaymentLimit = 0.30;
 
-            Console.WriteLine($"Оплата прошла: {paid}");
-            Console.WriteLine($"Остаток бонусов: {buyer.Bonuses} УЕ, денег: {buyer.Money} УЕ");
+            profileService.TopUpBalance(studentProfile, 2000m);
+            Console.WriteLine($"После пополнения: {studentProfile.MoneyBalance:F2} УЕ, бонусов: {studentProfile.BonusBalance:F2}");
+
+            bool paid = profileService.PayForPurchase(studentProfile, cart, out string paymentMessage);
+            Console.WriteLine(paymentMessage);
+
+            profileService.PrintProfileSummary(studentProfile, channels);
         }
     }
 }

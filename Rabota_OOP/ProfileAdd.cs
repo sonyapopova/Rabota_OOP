@@ -27,14 +27,28 @@ namespace classiki
 
         public bool PayForPurchase(UserProfile profile, ProductItem product, out string message)
         {
-            if (profile == null)
-                throw new ArgumentNullException(nameof(profile));
-
             if (product == null)
                 throw new ArgumentNullException(nameof(product));
 
+            Cart cart = new Cart();
+            cart.Add(product);
+
+            return PayForPurchase(profile, cart, out message);
+        }
+
+        public bool PayForPurchase(UserProfile profile, Cart cart, out string message)
+        {
+            if (profile == null)
+                throw new ArgumentNullException(nameof(profile));
+
+            if (cart == null)
+                throw new ArgumentNullException(nameof(cart));
+
+            if (cart.PositionsCount == 0)
+                throw new InvalidOperationException("Корзина пуста: нечего оплачивать.");
+
             //Рассчитываем стоимость товаров с учётом скидки
-            decimal originalPrice = (decimal)product.TotalPrice;
+            decimal originalPrice = cart.TotalPrice;
 
             decimal discountedPrice = Math.Round(originalPrice * (decimal)profile.PersonalDiscount, 2);
 
@@ -60,11 +74,13 @@ namespace classiki
             //Списываем использованные бонусы
             profile.BonusBalance -= (double)bonusPayment;
 
-            //Добавляем покупку в историю
-            profile.AddPurchase(product);
+            //Добавляем покупки в историю
+            foreach (var item in cart.Items)
+                profile.AddPurchase(item);
 
             message =
                 $"Покупка успешно оплачена!\n" +
+                $"Позиций в корзине: {cart.PositionsCount}\n" +
                 $"Стоимость до скидки: {originalPrice:F2} УЕ\n" +
                 $"Стоимость со скидкой: {discountedPrice:F2} УЕ\n" +
                 $"Оплачено бонусами: {bonusPayment:F2}\n" +
@@ -116,6 +132,7 @@ namespace classiki
             Console.WriteLine($"Профиль создан: {profile.CreatedAt}");
             Console.WriteLine($"Баланс: {moneyBalance:F2} УЕ | Бонусы: {bonusBalance:F2}");
             Console.WriteLine($"Всего контактов: {contactsCount}");
+            Console.WriteLine($"Совершено покупок: {profile.Purchases.Count}");
 
             foreach (var contact in profile.Contacts)
             { 

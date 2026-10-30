@@ -4,24 +4,36 @@ using System.Linq;
 
 namespace classiki
 {
+    /// <summary>
+    /// Корзина: набор товарных позиций. Скидка и лимит оплаты бонусами
+    /// берутся из профиля пользователя (UserProfile).
+    /// </summary>
     public class Cart
     {
-        private readonly List<CartItem> _items = new List<CartItem>();
+        private readonly List<ProductItem> _items = new List<ProductItem>();
 
-        public decimal DiscountPercent { get; set; } = 5m;
+        public IReadOnlyList<ProductItem> Items => _items;
 
-        public void Add(CartItem item) => _items.Add(item);
+        public int PositionsCount => _items.Count;
 
-        private decimal FullPrice => _items.Sum(i => i.Total);
+        public decimal TotalPrice => _items.Sum(item => (decimal)item.TotalPrice);
 
-        public decimal CalculatePrice() => FullPrice * (1 - DiscountPercent / 100m);
+        public void Add(ProductItem item)
+        {
+            if (item == null)
+                throw new ArgumentNullException(nameof(item));
 
-        public decimal CalculateDiscountAmount() => FullPrice * (DiscountPercent / 100m);
+            _items.Add(item);
+        }
 
-        public decimal ShowFinalPrice()
-        { var price = CalculatePrice(); Console.WriteLine($"Итог: {price} УЕ"); return price; }
+        public bool Remove(ProductItem item)
+        {
+            if (item == null)
+                throw new ArgumentNullException(nameof(item));
 
-        public decimal ShowDiscountAmount()
-        { var amount = CalculateDiscountAmount(); Console.WriteLine($"Скидка: {amount} УЕ"); return amount; }
+            return _items.Remove(item);
+        }
+
+        public void Clear() => _items.Clear();
     }
 }
