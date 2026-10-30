@@ -44,18 +44,18 @@ namespace classiki
 
             CartPrice price = cart.Calculate(0.8m);
 
-            Console.WriteLine($"Исходная цена: {price.OriginalPrice} УЕ");
-            Console.WriteLine($"Скидка: {price.DiscountAmount} УЕ");
+            Console.WriteLine($"Исходная цена: {price.OriginalPrice} котокоинов");
+            Console.WriteLine($"Скидка: {price.DiscountAmount} котокоинов");
 
             decimal total = price.OriginalPrice - price.DiscountAmount;
-            Console.WriteLine($"Итог: {total} УЕ");
+            Console.WriteLine($"Итог: {total} котокоинов");
 
             BuyerBalance buyer = new BuyerBalance(500m, 2000m);
             PaymentService paymentService = new PaymentService();
             bool paid = paymentService.Pay(buyer, total);
 
             Console.WriteLine($"Оплата прошла: {paid}");
-            Console.WriteLine($"Остаток бонусов: {buyer.Bonuses} УЕ, денег: {buyer.Money} УЕ");
+            Console.WriteLine($"Остаток бонусов: {buyer.Bonuses} котокоинов, денег: {buyer.Money} котокоинов");
         }
     }
 }

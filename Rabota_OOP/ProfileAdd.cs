@@ -65,10 +65,10 @@ namespace classiki
 
             message =
                 $"Покупка успешно оплачена!\n" +
-                $"Стоимость до скидки: {originalPrice:F2} УЕ\n" +
-                $"Стоимость со скидкой: {discountedPrice:F2} УЕ\n" +
+                $"Стоимость до скидки: {originalPrice:F2} котокоинов\n" +
+                $"Стоимость со скидкой: {discountedPrice:F2} котокоинов\n" +
                 $"Оплачено бонусами: {bonusPayment:F2}\n" +
-                $"Оплачено деньгами: {moneyPayment:F2} УЕ";
+                $"Оплачено деньгами: {moneyPayment:F2} котокоинов";
 
             return true;
         }
@@ -114,7 +114,7 @@ namespace classiki
             Console.WriteLine($"\nСоздан новый профиль: (ID: {profile.User.UserId})");
             Console.WriteLine($"Пользователь: {shortName} | Логин: {userLogin}");
             Console.WriteLine($"Профиль создан: {profile.CreatedAt}");
-            Console.WriteLine($"Баланс: {moneyBalance:F2} УЕ | Бонусы: {bonusBalance:F2}");
+            Console.WriteLine($"Баланс: {moneyBalance:F2} котокоинов | Бонусы: {bonusBalance:F2}");
             Console.WriteLine($"Всего контактов: {contactsCount}");
 
             foreach (var contact in profile.Contacts)

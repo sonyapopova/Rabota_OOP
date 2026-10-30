@@ -48,9 +48,9 @@ namespace classiki
         }
 
         //public decimal ShowFinalPrice()
-        //{ var price = CalculatePrice(); Console.WriteLine($"Итог: {price} УЕ"); return price; }
+        //{ var price = CalculatePrice(); Console.WriteLine($"Итог: {price} котокоинов"); return price; }
 
         //public decimal ShowDiscountAmount()
-        //{ var amount = CalculateDiscountAmount(); Console.WriteLine($"Скидка: {amount} УЕ"); return amount; }
+        //{ var amount = CalculateDiscountAmount(); Console.WriteLine($"Скидка: {amount} котокоинов"); return amount; }
     }
 }

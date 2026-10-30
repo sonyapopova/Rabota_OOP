@@ -21,7 +21,7 @@ namespace classiki
             buyer.Bonuses -= bonusPayment;
             buyer.Money -= moneyPayment;
 
-            Console.WriteLine($"Списано бонусами: {bonusPayment} УЕ, деньгами: {moneyPayment} УЕ");
+            Console.WriteLine($"Списано бонусами: {bonusPayment} котокоинов, деньгами: {moneyPayment} котокоинов");
             return true;
         }
     }
