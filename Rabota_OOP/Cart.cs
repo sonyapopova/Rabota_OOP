@@ -22,7 +22,17 @@ namespace classiki
             UserId = usetId;
         }
 
+        public int PositionsCount => _items.Count;
+
+        public bool IsEmpty => _items.Count == 0;
+
+        public decimal TotalPrice => FullPrice;
+
         public void Add(CartItem item) => _items.Add(item);
+
+        public bool Remove(CartItem item) => _items.Remove(item);
+
+        public void Clear() => _items.Clear();
 
         private decimal FullPrice => _items.Sum(i => i.Total);
 
