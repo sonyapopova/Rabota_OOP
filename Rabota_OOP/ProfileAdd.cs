@@ -59,9 +59,9 @@ namespace classiki
 
                 message =
                     "Недостаточно денежных средств для оплаты покупки.\n" +
-                    $"Требуется деньгами: {quote.MoneyPayment:F2} УЕ\n" +
-                    $"На балансе: {profile.MoneyBalance:F2} УЕ\n" +
-                    $"Не хватает: {missing:F2} УЕ\n" +
+                    $"Требуется деньгами: {quote.MoneyPayment:F2} котокоинов\n" +
+                    $"На балансе: {profile.MoneyBalance:F2} котокоинов\n" +
+                    $"Не хватает: {missing:F2} котокоинов\n" +
                     "Корзина и баланс не изменены.";
 
                 return false;
@@ -83,11 +83,11 @@ namespace classiki
             message =
                 $"Покупка успешно оплачена!\n" +
                 $"Позиций оплачено: {positionsCount}\n" +
-                $"Стоимость до скидки: {quote.OriginalPrice:F2} УЕ\n" +
-                $"Стоимость со скидкой: {quote.DiscountedPrice:F2} УЕ\n" +
+                $"Стоимость до скидки: {quote.OriginalPrice:F2} котокоинов\n" +
+                $"Стоимость со скидкой: {quote.DiscountedPrice:F2} котокоинов\n" +
                 $"Оплачено бонусами: {quote.BonusPayment:F2}\n" +
-                $"Оплачено деньгами: {quote.MoneyPayment:F2} УЕ\n" +
-                $"Корзина очищена: товаров {cart.PositionsCount}, итоговая цена {cart.TotalPrice:F2} УЕ";
+                $"Оплачено деньгами: {quote.MoneyPayment:F2} котокоинов\n" +
+                $"Корзина очищена: товаров {cart.PositionsCount}, итоговая цена {cart.TotalPrice:F2} котокоинов";
 
             return true;
         }
@@ -176,7 +176,7 @@ namespace classiki
             Console.WriteLine($"\nСоздан новый профиль: (ID: {profile.User.UserId})");
             Console.WriteLine($"Пользователь: {shortName} | Логин: {userLogin}");
             Console.WriteLine($"Профиль создан: {profile.CreatedAt}");
-            Console.WriteLine($"Баланс: {moneyBalance:F2} УЕ | Бонусы: {bonusBalance:F2}");
+            Console.WriteLine($"Баланс: {moneyBalance:F2} котокоинов | Бонусы: {bonusBalance:F2}");
             Console.WriteLine($"Всего контактов: {contactsCount}");
             Console.WriteLine($"Совершено покупок: {profile.Purchases.Count}");
 
