@@ -8,6 +8,7 @@ namespace classiki
         static void Main(string[] args)
         {
             ProfileAdd profileService = new ProfileAdd();
+            PaymentService paymentService = new PaymentService();
 
             
             List<Channel> channels = new List<Channel>
@@ -39,8 +40,8 @@ namespace classiki
             Console.WriteLine("\n=== Сценарий 1: успешная оплата ===");
 
             Cart cart = new Cart(student.UserId);
-            cart.Add(new ProductItem(new Product(1, "Ноутбук", 1000m), 1));
-            cart.Add(new ProductItem(new Product(2, "Мышь", 50m), 2));
+            cart.Add(new CartItem(new Product(1, "Ноутбук", 1000m), 1));
+            cart.Add(new CartItem(new Product(2, "Мышь", 50m), 2));
 
             Console.WriteLine($"Позиций в корзине: {cart.PositionsCount}, сумма: {cart.TotalPrice:F2} котокоинов");
 
@@ -50,7 +51,7 @@ namespace classiki
             profileService.TopUpBalance(studentProfile, 2000m);
             Console.WriteLine($"После пополнения: {studentProfile.MoneyBalance:F2} котокоинов, бонусов: {studentProfile.BonusBalance:F2}");
 
-            bool paid = profileService.PayForPurchase(studentProfile, cart, out string paymentMessage);
+            bool paid = paymentService.PayForPurchase(studentProfile, cart, out string paymentMessage);
             Console.WriteLine(paymentMessage);
             Console.WriteLine($"Состояние корзины после оплаты: товаров {cart.PositionsCount}, итоговая цена {cart.TotalPrice:F2} котокоинов");
             Console.WriteLine($"Проверка корзины: товаров {cart.PositionsCount}, TotalPrice = {cart.TotalPrice:F2} — " +
@@ -61,11 +62,11 @@ namespace classiki
             Console.WriteLine("\n=== Проверка владельца корзины ===");
 
             Cart foreignCart = new Cart(student.UserId + 1);
-            foreignCart.Add(new ProductItem(new Product(4, "Наушники", 1000m), 1));
+            foreignCart.Add(new CartItem(new Product(4, "Наушники", 1000m), 1));
 
             try
             {
-                profileService.PayForPurchase(studentProfile, foreignCart, out _);
+                paymentService.PayForPurchase(studentProfile, foreignCart, out _);
             }
             catch (InvalidOperationException ex)
             {
@@ -75,24 +76,24 @@ namespace classiki
             Console.WriteLine("\n=== Сценарий 2: оплата невозможна, затем пополнение и повтор ===");
 
             Cart expensiveCart = new Cart(student.UserId);
-            expensiveCart.Add(new ProductItem(new Product(3, "Телевизор", 50000m), 1));
+            expensiveCart.Add(new CartItem(new Product(3, "Телевизор", 50000m), 1));
 
             Console.WriteLine($"Корзина: товаров {expensiveCart.PositionsCount}, итоговая цена {expensiveCart.TotalPrice:F2} котокоинов");
             Console.WriteLine($"Денег на балансе: {studentProfile.MoneyBalance:F2} котокоинов, бонусов: {studentProfile.BonusBalance:F2}");
 
-            bool failed = profileService.PayForPurchase(studentProfile, expensiveCart, out string failedMessage);
+            bool failed = paymentService.PayForPurchase(studentProfile, expensiveCart, out string failedMessage);
             Console.WriteLine($"Результат оплаты: {failed}");
             Console.WriteLine(failedMessage);
             Console.WriteLine($"Корзина не изменилась: товаров {expensiveCart.PositionsCount}, итоговая цена {expensiveCart.TotalPrice:F2} котокоинов");
             Console.WriteLine($"Баланс не изменился: денег {studentProfile.MoneyBalance:F2} котокоинов, бонусов {studentProfile.BonusBalance:F2}");
 
-            decimal needMoney = profileService.CalculateMoneyPayment(studentProfile, expensiveCart);
+            decimal needMoney = paymentService.CalculateMoneyPayment(studentProfile, expensiveCart);
             decimal missingMoney = needMoney - studentProfile.MoneyBalance;
             Console.WriteLine($"\nПополняем на недостающую сумму: {missingMoney:F2} котокоинов");
             profileService.TopUpBalance(studentProfile, missingMoney);
             Console.WriteLine($"После пополнения: денег {studentProfile.MoneyBalance:F2} котокоинов, бонусов {studentProfile.BonusBalance:F2}");
 
-            bool paidAfterTopUp = profileService.PayForPurchase(studentProfile, expensiveCart, out string successMessage);
+            bool paidAfterTopUp = paymentService.PayForPurchase(studentProfile, expensiveCart, out string successMessage);
             Console.WriteLine($"Результат оплаты: {paidAfterTopUp}");
             Console.WriteLine(successMessage);
             Console.WriteLine($"Корзина после оплаты: товаров {expensiveCart.PositionsCount}, итоговая цена {expensiveCart.TotalPrice:F2} котокоинов");

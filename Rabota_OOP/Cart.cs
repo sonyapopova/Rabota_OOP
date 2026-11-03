@@ -12,11 +12,11 @@ namespace classiki
     public class Cart
     {
         private static int cartId = 0;
-        private readonly List<ProductItem> _items = new List<ProductItem>();
+        private readonly List<CartItem> _items = new List<CartItem>();
 
         public int Id { get; }
         public int UserId { get; }
-        public IReadOnlyList<ProductItem> Items => _items;
+        public IReadOnlyList<CartItem> Items => _items;
 
         public int PositionsCount => _items.Count;
 
@@ -35,14 +35,14 @@ namespace classiki
             UserId = userId;
         }
 
-        public void Add(ProductItem item)
+        public void Add(CartItem item)
         {
             ValidateItem(item);
 
             _items.Add(item);
         }
 
-        public bool Remove(ProductItem item)
+        public bool Remove(CartItem item)
         {
             ValidateItem(item);
 
@@ -64,7 +64,7 @@ namespace classiki
             return _items.Sum(item => item.TotalPrice);
         }
 
-        private static void ValidateItem(ProductItem item)
+        private static void ValidateItem(CartItem item)
         {
             if (item == null)
                 throw new ArgumentNullException(nameof(item));
