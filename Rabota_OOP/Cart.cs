@@ -1,17 +1,21 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Threading;
 
 namespace classiki
 {
     /// <summary>
-    /// Корзина: набор товарных позиций. Скидка и лимит оплаты бонусами
-    /// берутся из профиля пользователя (UserProfile).
+    /// Корзина: набор товарных позиций, привязанный к пользователю.
+    /// Скидка и лимит оплаты бонусами берутся из профиля пользователя (UserProfile).
     /// </summary>
     public class Cart
     {
+        private static int cartId = 0;
         private readonly List<ProductItem> _items = new List<ProductItem>();
 
+        public int Id { get; }
+        public int UserId { get; }
         public IReadOnlyList<ProductItem> Items => _items;
 
         public int PositionsCount => _items.Count;
@@ -19,6 +23,17 @@ namespace classiki
         public bool IsEmpty => _items.Count == 0;
 
         public decimal TotalPrice => RecalculateTotal();
+
+        public Cart(int userId)
+        {
+            if (userId <= 0)
+                throw new ArgumentOutOfRangeException(
+                    nameof(userId),
+                    "Идентификатор пользователя должен быть положительным.");
+
+            Id = Interlocked.Increment(ref cartId);
+            UserId = userId;
+        }
 
         public void Add(ProductItem item)
         {
@@ -46,7 +61,7 @@ namespace classiki
 
         private decimal RecalculateTotal()
         {
-            return _items.Sum(item => (decimal)item.TotalPrice);
+            return _items.Sum(item => item.TotalPrice);
         }
 
         private static void ValidateItem(ProductItem item)

@@ -7,11 +7,11 @@ namespace classiki
     /// </summary>
     public readonly record struct BuyerBalanceState
     {
-        public double Bonuses { get; }
+        public decimal Bonuses { get; }
         public decimal Money { get; }
-        public double BonusPaymentShareMultiplier { get; }
+        public decimal BonusPaymentShareMultiplier { get; }
 
-        public BuyerBalanceState(double bonuses, decimal money, double bonusPaymentShareMultiplier)
+        public BuyerBalanceState(decimal bonuses, decimal money, decimal bonusPaymentShareMultiplier)
         {
             EnsureBonusesRange(bonuses);
             EnsureMoneyRange(money);
@@ -22,9 +22,9 @@ namespace classiki
             BonusPaymentShareMultiplier = bonusPaymentShareMultiplier;
         }
 
-        private static void EnsureBonusesRange(double bonuses)
+        private static void EnsureBonusesRange(decimal bonuses)
         {
-            if (double.IsNaN(bonuses) || double.IsInfinity(bonuses) || bonuses < 0.0)
+            if (bonuses < 0m)
                 throw new ArgumentOutOfRangeException(
                     nameof(bonuses),
                     "Баланс бонусов не может быть отрицательным.");
@@ -38,12 +38,9 @@ namespace classiki
                     "Денежный баланс не может быть отрицательным.");
         }
 
-        private static void EnsureBonusShareRange(double bonusPaymentShareMultiplier)
+        private static void EnsureBonusShareRange(decimal bonusPaymentShareMultiplier)
         {
-            if (double.IsNaN(bonusPaymentShareMultiplier) ||
-                double.IsInfinity(bonusPaymentShareMultiplier) ||
-                bonusPaymentShareMultiplier < 0.0 ||
-                bonusPaymentShareMultiplier > 0.5)
+            if (bonusPaymentShareMultiplier < 0.0m || bonusPaymentShareMultiplier > 0.5m)
                 throw new ArgumentOutOfRangeException(
                     nameof(bonusPaymentShareMultiplier),
                     "Доля оплаты бонусами должна находиться в диапазоне от 0.0 до 0.5.");

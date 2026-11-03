@@ -38,14 +38,14 @@ namespace classiki
 
             Console.WriteLine("\n=== Сценарий 1: успешная оплата ===");
 
-            Cart cart = new Cart();
-            cart.Add(new ProductItem("Ноутбук", 1000, 1));
-            cart.Add(new ProductItem("Мышь", 50, 2));
+            Cart cart = new Cart(student.UserId);
+            cart.Add(new ProductItem(new Product(1, "Ноутбук", 1000m), 1));
+            cart.Add(new ProductItem(new Product(2, "Мышь", 50m), 2));
 
             Console.WriteLine($"Позиций в корзине: {cart.PositionsCount}, сумма: {cart.TotalPrice:F2} котокоинов");
 
-            studentProfile.PersonalDiscount = 0.90;
-            studentProfile.BonusPaymentLimit = 0.30;
+            studentProfile.PersonalDiscount = 0.90m;
+            studentProfile.BonusPaymentLimit = 0.30m;
 
             profileService.TopUpBalance(studentProfile, 2000m);
             Console.WriteLine($"После пополнения: {studentProfile.MoneyBalance:F2} котокоинов, бонусов: {studentProfile.BonusBalance:F2}");
@@ -58,10 +58,24 @@ namespace classiki
 
             profileService.PrintProfileSummary(studentProfile, channels);
 
+            Console.WriteLine("\n=== Проверка владельца корзины ===");
+
+            Cart foreignCart = new Cart(student.UserId + 1);
+            foreignCart.Add(new ProductItem(new Product(4, "Наушники", 1000m), 1));
+
+            try
+            {
+                profileService.PayForPurchase(studentProfile, foreignCart, out _);
+            }
+            catch (InvalidOperationException ex)
+            {
+                Console.WriteLine($"Оплата чужой корзины отклонена: {ex.Message}");
+            }
+
             Console.WriteLine("\n=== Сценарий 2: оплата невозможна, затем пополнение и повтор ===");
 
-            Cart expensiveCart = new Cart();
-            expensiveCart.Add(new ProductItem("Телевизор", 50000, 1));
+            Cart expensiveCart = new Cart(student.UserId);
+            expensiveCart.Add(new ProductItem(new Product(3, "Телевизор", 50000m), 1));
 
             Console.WriteLine($"Корзина: товаров {expensiveCart.PositionsCount}, итоговая цена {expensiveCart.TotalPrice:F2} котокоинов");
             Console.WriteLine($"Денег на балансе: {studentProfile.MoneyBalance:F2} котокоинов, бонусов: {studentProfile.BonusBalance:F2}");

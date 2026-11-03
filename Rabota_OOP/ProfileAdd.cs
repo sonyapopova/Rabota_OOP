@@ -6,8 +6,6 @@ namespace classiki
 {
     public class ProfileAdd
     {
-
-        //Рома ОТСЮДА
         public void TopUpBalance(UserProfile profile, decimal amount)
         {
             if (profile == null)
@@ -22,15 +20,18 @@ namespace classiki
             profile.MoneyBalance += amount;
 
             //Начисляем 10% от суммы пополнения бонусами
-            profile.BonusBalance += (double)(amount * 0.10m);
+            profile.BonusBalance += amount * 0.10m;
         }
 
         public bool PayForPurchase(UserProfile profile, ProductItem product, out string message)
         {
+            if (profile == null)
+                throw new ArgumentNullException(nameof(profile));
+
             if (product == null)
                 throw new ArgumentNullException(nameof(product));
 
-            Cart cart = new Cart();
+            Cart cart = new Cart(profile.User.UserId);
             cart.Add(product);
 
             return PayForPurchase(profile, cart, out message);
@@ -44,11 +45,13 @@ namespace classiki
             if (cart == null)
                 throw new ArgumentNullException(nameof(cart));
 
+            EnsureCartOwner(profile, cart);
+
             if (cart.IsEmpty)
                 throw new InvalidOperationException("Корзина пуста: нечего оплачивать.");
 
             //Корзина сама считает цену с учётом персональной скидки профиля
-            CartPrice price = cart.Calculate((decimal)profile.PersonalDiscount);
+            CartPrice price = cart.Calculate(profile.PersonalDiscount);
 
             return TryPay(profile, cart, price, out message);
         }
@@ -65,13 +68,22 @@ namespace classiki
             if (cart == null)
                 throw new ArgumentNullException(nameof(cart));
 
+            EnsureCartOwner(profile, cart);
+
             if (cart.IsEmpty)
                 throw new InvalidOperationException("Корзина пуста: нечего оплачивать.");
 
-            CartPrice price = cart.Calculate((decimal)profile.PersonalDiscount);
+            CartPrice price = cart.Calculate(profile.PersonalDiscount);
             BuyerBalanceState balance = CreateBalanceState(profile);
 
             return CalculateMoneyPayment(price, balance);
+        }
+
+        private static void EnsureCartOwner(UserProfile profile, Cart cart)
+        {
+            if (cart.UserId != profile.User.UserId)
+                throw new InvalidOperationException(
+                    "Корзина принадлежит другому пользователю.");
         }
 
         //Рома: расчёт оплаты бонусами и деньгами
@@ -79,10 +91,10 @@ namespace classiki
         {
             //Максимальная сумма, которую разрешено оплатить бонусами
             decimal maxBonusPayment = Math.Floor(
-                price.FinalPrice * (decimal)balance.BonusPaymentShareMultiplier);
+                price.FinalPrice * balance.BonusPaymentShareMultiplier);
 
             //Фактическая сумма оплаты бонусами
-            return Math.Min(maxBonusPayment, (decimal)balance.Bonuses);
+            return Math.Min(maxBonusPayment, balance.Bonuses);
         }
 
         private static decimal CalculateMoneyPayment(CartPrice price, BuyerBalanceState balance)
@@ -116,7 +128,7 @@ namespace classiki
             profile.MoneyBalance = balance.Money - moneyPayment;
 
             //Списываем использованные бонусы
-            profile.BonusBalance = balance.Bonuses - (double)bonusPayment;
+            profile.BonusBalance = balance.Bonuses - bonusPayment;
 
             //Добавляем покупки в историю
             foreach (var item in cart.Items)
@@ -169,7 +181,6 @@ namespace classiki
                 profile.MoneyBalance,
                 profile.BonusPaymentLimit);
         }
-        //Рома ДО СЮДА
 
         public UserProfile CreateProfile(User user)
         {

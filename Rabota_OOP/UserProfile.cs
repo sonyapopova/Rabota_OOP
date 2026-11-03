@@ -8,18 +8,18 @@ namespace classiki
     {
         private readonly List<Contact> _contacts = new List<Contact>();
 
-        //Рома ОТСЮДА
-        private double bonusBalance = 0.0;
-        private double personalDiscount = 1.0;
-        private double bonusPaymentLimit = 0.0;
+        //Бонусный баланс, персональная скидка и лимит оплаты бонусами
+        private decimal bonusBalance = 0m;
+        private decimal personalDiscount = 1.0m;
+        private decimal bonusPaymentLimit = 0.0m;
 
         //Баланс бонусов: не может быть меньше 0
-        public double BonusBalance
+        public decimal BonusBalance
         {
             get => bonusBalance;
             set
             {
-                if (double.IsNaN(value) || double.IsInfinity(value) || value < 0.0)
+                if (value < 0m)
                     throw new ArgumentOutOfRangeException(
                         nameof(value),
                         "Баланс бонусов не может быть отрицательным.");
@@ -30,13 +30,12 @@ namespace classiki
 
         //Множитель цены после скидки:
         //0.01 — скидка 99%, 1.00 — скидки нет
-        public double PersonalDiscount
+        public decimal PersonalDiscount
         {
             get => personalDiscount;
             set
             {
-                if (double.IsNaN(value) || double.IsInfinity(value) ||
-                    value < 0.01 || value > 1.00)
+                if (value < 0.01m || value > 1.00m)
                     throw new ArgumentOutOfRangeException(
                         nameof(value),
                         "Персональная скидка должна находиться в диапазоне от 0.01 до 1.00.");
@@ -46,13 +45,12 @@ namespace classiki
         }
 
         //Максимальная доля итоговой цены, которую разрешено оплатить бонусами
-        public double BonusPaymentLimit
+        public decimal BonusPaymentLimit
         {
             get => bonusPaymentLimit;
             set
             {
-                if (double.IsNaN(value) || double.IsInfinity(value) ||
-                    value < 0.0 || value > 0.5)
+                if (value < 0.0m || value > 0.5m)
                     throw new ArgumentOutOfRangeException(
                         nameof(value),
                         "Доля оплаты бонусами должна находиться в диапазоне от 0.0 до 0.5.");
@@ -64,10 +62,8 @@ namespace classiki
         //Совершённые покупки
         private readonly List<ProductItem> _purchases = new List<ProductItem>();
         public IReadOnlyList<ProductItem> Purchases => _purchases;
-        //Рома ДО СЮДА
 
-        //Начинается. НЕ МОЯ (Ромы) ЧАСТЬ РАБОТЫ, НО БЕЗ ЭТОГО МОЯ НЕ РАБОТАЕТ. 
-        //Баланс денег. 
+        //Баланс денег.
         private decimal moneyBalance = 0m;
         public decimal MoneyBalance
         {
@@ -82,7 +78,6 @@ namespace classiki
                 moneyBalance = value;
             }
         }
-        //Заканчивается. НЕ МОЯ (Ромы) ЧАСТЬ РАБОТЫ, НО БЕЗ ЭТОГО МОЯ НЕ РАБОТАЕТ. 
 
         public User User { get; }
         public IReadOnlyList<Contact> Contacts => _contacts;
@@ -132,7 +127,7 @@ namespace classiki
             out string login,
             out int contactsCount,
             out decimal moneyBalance,
-            out double bonusBalance)
+            out decimal bonusBalance)
         {
             (fullName, login) = User;
             contactsCount = _contacts.Count;
