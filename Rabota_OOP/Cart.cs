@@ -2,7 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 
-namespace classiki
+namespace Marketplace.Domain
 {
     public struct CartPrice
     {

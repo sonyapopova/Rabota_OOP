@@ -1,7 +1,7 @@
 using System;
 using System.Threading;
 
-namespace classiki
+namespace Marketplace.Domain
 {
     //Начинается. НЕ МОЯ (Ромы) ЧАСТЬ РАБОТЫ, НО БЕЗ ЭТОГО МОЯ НЕ РАБОТАЕТ. ВМЕСТО ТОВАРНОЙ ПОЗИЦИИ
     public class ProductItem

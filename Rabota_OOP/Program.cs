@@ -1,7 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 
-namespace classiki
+namespace Marketplace.Domain
 {
     internal class Program
     {

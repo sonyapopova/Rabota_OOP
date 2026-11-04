@@ -1,4 +1,4 @@
-namespace classiki
+namespace Marketplace.Domain
 {
     public struct BuyerBalanceState
     {

@@ -1,6 +1,6 @@
 using System;
 
-namespace classiki
+namespace Marketplace.Domain
 {
     public class PaymentService
     {
