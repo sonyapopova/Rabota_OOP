@@ -1,6 +1,6 @@
 using System;
 
-namespace classiki
+namespace Marketplace.Domain
 {
     /// <summary>
     /// Товар: идентификатор, название и цена за единицу.
@@ -30,5 +30,11 @@ namespace classiki
             Name = name.Trim();
             Price = price;
         }
+
+        public int GetId() => Id;
+
+        public string GetTitle() => Name;
+
+        public decimal GetPrice() => Price;
     }
 }

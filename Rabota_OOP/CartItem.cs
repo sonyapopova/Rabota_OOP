@@ -1,7 +1,7 @@
 using System;
 using System.Threading;
 
-namespace classiki
+namespace Marketplace.Domain
 {
     /// <summary>
     /// Товарная позиция в корзине: товар и количество единиц.

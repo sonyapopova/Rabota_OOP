@@ -1,6 +1,6 @@
 using System;
 
-namespace classiki
+namespace Marketplace.Domain
 {
     /// <summary>
     /// Расчётная цена корзины: исходная цена, множитель скидки и размер скидки в деньгах.

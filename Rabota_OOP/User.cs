@@ -2,7 +2,7 @@ using System;
 using System.Security.Cryptography;
 using System.Threading;
 
-namespace classiki
+namespace Marketplace.Domain
 {
     public class User
     {

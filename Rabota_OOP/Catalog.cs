@@ -2,7 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 
-namespace classiki
+namespace Marketplace.Domain
 {
     /// <summary>
     /// Каталог товаров: добавление, поиск и удаление по названию.

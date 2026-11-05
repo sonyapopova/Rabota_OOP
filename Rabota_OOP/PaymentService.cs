@@ -1,6 +1,6 @@
 using System;
 
-namespace classiki
+namespace Marketplace.Domain
 {
     /// <summary>
     /// Сервис оплаты: рассчитывает стоимость корзины с учётом бонусов

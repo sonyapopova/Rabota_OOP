@@ -1,6 +1,6 @@
 using System;
 
-namespace classiki
+namespace Marketplace.Domain
 {
     /// <summary>
     /// Баланс покупателя: бонусы, деньги и разрешённая доля оплаты бонусами.

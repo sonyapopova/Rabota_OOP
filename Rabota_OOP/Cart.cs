@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
 
-namespace classiki
+namespace Marketplace.Domain
 {
     /// <summary>
     /// Корзина: набор товарных позиций, привязанный к пользователю.
