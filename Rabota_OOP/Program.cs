@@ -1,7 +1,10 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.IO;
+using Marketplace.DataAccess;
+using Marketplace.Domain;
 
-namespace Marketplace.Domain
+namespace Marketplace.Presentation
 {
     internal class Program
     {
@@ -101,6 +104,56 @@ namespace Marketplace.Domain
                 $"{(expensiveCart.IsEmpty && expensiveCart.TotalPrice == 0m ? "корзина пуста" : "корзина не пуста")}");
 
             profileService.PrintProfileSummary(studentProfile, channels);
+
+            Console.WriteLine("\n=== Задание 3: каталог, DataAccess и отчёты ===");
+
+            Catalog catalog = new Catalog();
+
+            try
+            {
+                catalog.Add(new Product(4, "Некорректный товар", -5m));
+            }
+            catch (ArgumentException ex)
+            {
+                Console.WriteLine($"Данные отклонены: {ex.Message}");
+            }
+
+            catalog.Add(new Product(1, "Кружка", 450m));
+            catalog.Add(new Product(2, "Термос", 1200m));
+            catalog.Add(new Product(3, "Набор стикеров", 90m));
+
+            Console.WriteLine($"Товаров в каталоге: {catalog.GetCount()}");
+
+            Product? foundProduct = catalog.Find("термос");
+            Console.WriteLine(foundProduct is null
+                ? "Товар «Термос» не найден."
+                : $"Найден товар: {foundProduct.GetTitle()} — {foundProduct.GetPrice():F2} котокоинов");
+
+            bool removed = catalog.Remove("Набор стикеров");
+            Console.WriteLine($"Удаление товара «Набор стикеров»: {removed}");
+
+            CatalogPrinter printer = new CatalogPrinter();
+            Console.WriteLine("\nТовары каталога:");
+            printer.PrintAll(catalog.GetProducts());
+
+            Console.WriteLine("\nДва самых дорогих товара:");
+            printer.PrintTop(catalog.GetProducts(), 2);
+
+            CatalogReport report = new CatalogReport();
+            Console.WriteLine($"\nСредняя цена: {report.GetAveragePrice(catalog.GetProducts()):F2} котокоинов");
+            Console.WriteLine(report.GetSummary(catalog.GetProducts()));
+
+            // DIP: работаем через интерфейс, а не через конкретный класс.
+            string productsFile = Path.Combine(Path.GetTempPath(), "marketplace_products.csv");
+            IProductRepository repository = new FileProductRepository(productsFile);
+            repository.Save(catalog.GetProducts());
+
+            List<Product> loadedProducts = repository.Load();
+            Console.WriteLine($"\nЗагружено товаров из файла: {loadedProducts.Count}");
+            printer.PrintAll(loadedProducts);
+
+            // Снаружи нельзя изменить внутреннюю коллекцию каталога:
+            // catalog.GetProducts().Clear(); // не компилируется: у IReadOnlyList<T> нет Clear.
         }
     }
 }
