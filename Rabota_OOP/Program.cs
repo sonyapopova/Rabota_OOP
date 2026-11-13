@@ -301,6 +301,15 @@ namespace Marketplace.Presentation
             {
                 Console.WriteLine($"Percent = 120 отклонён: {ex.Message}");
             }
+
+            try
+            {
+                discount.MinSum = -1;
+            }
+            catch (ArgumentOutOfRangeException ex)
+            {
+                Console.WriteLine($"MinSum = -1 отклонён: {ex.Message}");
+            }
         }
 
         private static void RunCheckoutScenario()

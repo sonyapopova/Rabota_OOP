@@ -1,197 +1,177 @@
 # Rabota_OOP
 
-## Занятие 4
+## Занятие 4. Свойства и перегрузка методов
 
 ## Учебная группа 251-337
 
-Участники группы: Попова София Николаевна, Макаров Роман Сергеевич, Титова Мария Дмитриевна, Лебедев Александр Андреевич.
+Участники группы: Попова София Николаевна (лидер группы), Макаров Роман Сергеевич, Титова Мария Дмитриевна, Лебедев Александр Андреевич.
 
-Исходный текст задания: 
-Мы продолжаем проект маркетплейса (занятия 2 и 3). Каталог, доступ к данным и
-печать уже готовы; на этом занятии заменяем методы Get... / Set... на свойства и
-добавляем перегрузки GetInfo .
+## Исходный текст задания
+
+### Задание 3 (групповое)
+
+#### Проект
+
+Мы **продолжаем проект маркетплейса** (занятия 2 и 3). Каталог, доступ к данным и печать уже готовы; на этом занятии заменяем методы `Get...`/`Set...` на **свойства** и добавляем **перегрузки** `GetInfo`.
+
 Правила проекта:
+1. Один тип — один файл; пространства имён `Marketplace.Domain` и `Marketplace.Services`.
+2. Имена свойств — существительные с большой буквы (`Price`, `IsBudget`), имена методов — глаголы (`Calculate`, `GetReport`).
+3. Названия типов из занятий 2 и 3 не меняются: `Product`, `CustomerProfile`, `Cart`, `CartItem` (у `CartItem` меняется только вид: класс становится `readonly struct`).
 
-Распределение задач по участникам
-Участник 1 — класс Product ( Product.cs ) — главный по теме занятия
-Класс должен содержать все четыре вида свойств из лабораторной и две перегрузки
-GetInfo :
-5. Как объявить обязательное свойство FullName , без которого объект не создать?
-6. Почему нельзя объявить два метода GetInfo() с разными типами возврата?
-7. Почему у свойства в readonly struct не может быть аксессора set ?
+#### Распределение задач по участникам
 
-1. public string Group { get; set; } = "не распределён";
-2. public int Age { get; private set; }
-3. public bool IsJunior => Age < 20;
-4. public string CardNumber { get; init; }
-5. public required string FullName { get; init; }
-6. Тип возврата не входит в сигнатуру метода, поэтому обе версии имеют одну и ту же
-сигнатуру — ошибка CS0111.
-7. readonly struct запрещает изменять свои поля после создания, поэтому set не
-компилируется: допустимы init (значение задаётся при создании) или свойство
-только для чтения.
+##### Участник 1 — класс `Product` (`Product.cs`) — главный по теме занятия
 
-1. Один тип — один файл; пространства имён Marketplace.Domain и
-Marketplace.Services .
-2. Имена свойств — существительные с большой буквы ( Price , IsBudget ), имена
-методов — глаголы ( Calculate , GetReport ).
-3. Названия типов из занятий 2 и 3 не меняются: Product , CustomerProfile , Cart ,
-CartItem (у CartItem меняется только вид: класс становится readonly struct ).
+Класс должен содержать **все четыре вида свойств** из лабораторной и **две перегрузки** `GetInfo`:
 
-Требуется дополнительно:
-
-```csharp
+```cs
 namespace Marketplace.Domain;
 
 public class Product
 {
-// 1. string — сокращённая (автоматическая) запись, обязательна при
-создании
-public required string Title { get; init; }
-// 2. string — полная запись с проверкой на пустоту
-private string article = string.Empty;
-public string Article
-{
-get => article;
-set
-{
-if (string.IsNullOrWhiteSpace(value))
-throw new ArgumentException("Артикул обязателен",
-nameof(value));
-article = value;
-}
-}
-// 3. int — полная запись, не допускает отрицательных значений
-private int price;
-public int Price
-{
-//TODO: ⚠️ get и set с проверкой value < 0 ⚠️
-}
-// 4. bool — вычисляемое свойство: true, если Price < 25
-//TODO: ⚠️ public bool IsBudget => ... ⚠️
-// 5. Перегрузки
-//TODO: ⚠️ public string GetInfo() => GetInfo(true); ⚠️
-//TODO: ⚠️ public string GetInfo(bool includeIntProperty) { ... } ⚠️
-// 6. Статус меняется только внутри класса
-public string Status { get; private set; } = "В наличии";
-//TODO: ⚠️ public void ChangeStatus(string newStatus) ⚠️
-//TODO: ⚠️ private static void EnsureStatus(string value) ⚠️
+    // 1. string — сокращённая (автоматическая) запись, обязательна при создании
+    public required string Title { get; init; }
+
+    // 2. string — полная запись с проверкой на пустоту
+    private string article = string.Empty;
+    public string Article
+    {
+        get => article;
+        set
+        {
+            if (string.IsNullOrWhiteSpace(value))
+                throw new ArgumentException("Артикул обязателен", nameof(value));
+            article = value;
+        }
+    }
+
+    // 3. int — полная запись, не допускает отрицательных значений
+    private int price;
+    public int Price
+    {
+        //TODO: ⚠️ get и set с проверкой value < 0 ⚠️
+    }
+
+    // 4. bool — вычисляемое свойство: true, если Price < 25
+    //TODO: ⚠️ public bool IsBudget => ... ⚠️
+
+    // 5. Перегрузки
+    //TODO: ⚠️ public string GetInfo() => GetInfo(true); ⚠️
+    //TODO: ⚠️ public string GetInfo(bool includeIntProperty) { ... } ⚠️
+
+    // 6. Статус меняется только внутри класса
+    public string Status { get; private set; } = "В наличии";
+
+    //TODO: ⚠️ public void ChangeStatus(string newStatus) ⚠️
+    //TODO: ⚠️ private static void EnsureStatus(string value) ⚠️
 }
 ```
 
-Участник 2 — класс CustomerProfile ( CustomerProfile.cs )
-Требуется:
+**Требуется дополнительно:**
+1. Свойство `Status` с `private set` (статус меняется только внутри класса).
+2. Метод `ChangeStatus(string newStatus)` с **приватной** проверкой допустимых значений: `"В наличии"`, `"Нет в наличии"`, `"Под заказ"` (список допустимых значений храните в приватном статическом поле).
+3. Убедиться, что `product.Price = -10;` и `product.Status = "Продан";` не компилируются, а `product.ChangeStatus("Продано");` выбрасывает исключение.
 
-Участник 3 — скидки и расчёт ( Discount.cs )
-1. Свойство Status с private set (статус меняется только внутри класса).
-2. Метод ChangeStatus(string newStatus) с приватной проверкой допустимых
-значений: "В наличии" , "Нет в наличии" , "Под заказ" (список допустимых
-значений храните в приватном статическом поле).
-3. Убедиться, что product.Status = "Продан"; не компилируется, а
-product.Price = -10; и product.ChangeStatus("Продано"); выбрасывают исключение.
+##### Участник 2 — класс `CustomerProfile` (`CustomerProfile.cs`)
 
-1. FullName — автоматическое свойство, required + init .
-2. Phone — автоматическое свойство с инициализатором string.Empty .
-3. Email — полная запись: сеттер проверяет, что строка содержит @ (приватный метод
-EnsureValidEmail ).
-4. Rating — int , полная запись с проверкой диапазона 0..5 , резервное поле
-rating .
-5. Вычисляемое свойство IsTrusted => Rating >= 4 .
+**Требуется:**
+1. `FullName` — автоматическое свойство, `required` + `init`.
+2. `Phone` — автоматическое свойство с инициализатором `string.Empty`.
+3. `Email` — **полная** запись: сеттер проверяет, что строка содержит `@` (приватный метод `EnsureValidEmail`).
+4. `Rating` — `int`, полная запись с проверкой диапазона `0..5`, резервное поле `rating`.
+5. Вычисляемое свойство `IsTrusted => Rating >= 4`.
 6. Перегруженные методы:
-string GetInfo() ;
-string GetInfo(bool includeRating) ;
-string GetContactInfo(bool includePhone) .
-7. 1-2 приватных метода ( EnsureValidEmail , NormalizePhone ).
+	- `string GetInfo()`;
+	- `string GetInfo(bool includeRating)`;
+	- `string GetContactInfo(bool includePhone)`.
+7. **1-2 приватных** метода (`EnsureValidEmail`, `NormalizePhone`).
 
-```csharp
+```cs
 namespace Marketplace.Domain;
 
 public class CustomerProfile
 {
-public required string FullName { get; init; }
-public string Phone { get; set; } = string.Empty;
-//TODO: ⚠️ Email — полная запись с EnsureValidEmail ⚠️
-//TODO: ⚠️ Rating — полная запись с проверкой 0..5 ⚠️
-//TODO: ⚠️ public bool IsTrusted => Rating >= 4; ⚠️
-//TODO: ⚠️ public string GetInfo() и GetInfo(bool includeRating) ⚠️
-//TODO: ⚠️ public string GetContactInfo(bool includePhone) ⚠️
-//TODO: ⚠️ private static void EnsureValidEmail(string value) ⚠️
-//TODO: ⚠️ private static string NormalizePhone(string value) ⚠️
+    public required string FullName { get; init; }
+    public string Phone { get; set; } = string.Empty;
+
+    //TODO: ⚠️ Email — полная запись с EnsureValidEmail ⚠️
+    //TODO: ⚠️ Rating — полная запись с проверкой 0..5 ⚠️
+    //TODO: ⚠️ public bool IsTrusted => Rating >= 4; ⚠️
+    //TODO: ⚠️ public string GetInfo() и GetInfo(bool includeRating) ⚠️
+    //TODO: ⚠️ public string GetContactInfo(bool includePhone) ⚠️
+    //TODO: ⚠️ private static void EnsureValidEmail(string value) ⚠️
+    //TODO: ⚠️ private static string NormalizePhone(string value) ⚠️
 }
 ```
 
-Требуется:
+##### Участник 3 — скидки и расчёт (`Discount.cs`)
 
-Участник 4 — позиция корзины и сервис оформления заказа
-( CartItem.cs , CheckoutService.cs )
-Требуется:
-1. Класс Discount со свойствами:
-Name — сокращённая запись, required ;
-Percent — decimal , полная запись с проверкой 0..100 ;
-MinSum — int , полная запись с проверкой >= 0 (минимальная сумма заказа);
-ValidUntil — DateTime с init ;
-IsActive — вычисляемое bool ( ValidUntil > DateTime.Now ).
-2. Метод int Calculate(int total) — цена после скидки с учётом минимальной
-суммы; внутри 1-2 приватных метода ( ApplyDiscount , EnsurePercent ).
-3. Перегрузка int Calculate(int total, decimal percent) .
+**Требуется:**
+1. Класс `Discount` со свойствами:
+	- `Name` — сокращённая запись, `required`;
+	- `Percent` — `decimal`, полная запись с проверкой `0..100`;
+	- `MinSum` — `int`, полная запись с проверкой `>= 0` (минимальная сумма заказа);
+	- `ValidUntil` — `DateTime` с `init`;
+	- `IsActive` — вычисляемое `bool` (`ValidUntil > DateTime.Now`).
+2. Метод `int Calculate(int total)` — цена после скидки с учётом минимальной суммы; внутри **1-2 приватных** метода (`ApplyDiscount`, `EnsurePercent`).
+3. **Перегрузка** `int Calculate(int total, decimal percent)`.
 4. Показать, что передача недопустимых значений через свойства не проходит.
 
-```csharp
+```cs
 namespace Marketplace.Domain;
 
 public class Discount
 {
-public required string Name { get; init; }
-public DateTime ValidUntil { get; init; }
-//TODO: ⚠️ Percent — decimal, полная запись, 0..100 ⚠️
-//TODO: ⚠️ MinSum — int, полная запись, >= 0 ⚠️
-//TODO: ⚠️ public bool IsActive => ValidUntil > DateTime.Now; ⚠️
-//TODO: ⚠️ public int Calculate(int total) ⚠️
-//TODO: ⚠️ public int Calculate(int total, decimal percent) ⚠️
-//TODO: ⚠️ private static int ApplyDiscount(int total, decimal percent)
-⚠️
-//TODO: ⚠️ private static void EnsurePercent(decimal value) ⚠️
+    public required string Name { get; init; }
+    public DateTime ValidUntil { get; init; }
+
+    //TODO: ⚠️ Percent — decimal, полная запись, 0..100 ⚠️
+    //TODO: ⚠️ MinSum — int, полная запись, >= 0 ⚠️
+    //TODO: ⚠️ public bool IsActive => ValidUntil > DateTime.Now; ⚠️
+
+    //TODO: ⚠️ public int Calculate(int total) ⚠️
+    //TODO: ⚠️ public int Calculate(int total, decimal percent) ⚠️
+
+    //TODO: ⚠️ private static int ApplyDiscount(int total, decimal percent) ⚠️
+    //TODO: ⚠️ private static void EnsurePercent(decimal value) ⚠️
 }
 ```
 
-1. readonly struct CartItem — позиция корзины со свойствами:
-ProductId , Quantity , PricePerUnit — только для чтения, задаются
-конструктором;
-Total — вычисляемое свойство ( PricePerUnit * Quantity );
-конструктор проверяет, что количество положительное, а цена не отрицательная.
+##### Участник 4 — позиция корзины и сервис оформления заказа (`CartItem.cs`, `CheckoutService.cs`)
 
-i️ На занятии 2 позиция корзины была классом. Теперь оформляем её как readonly
-struct : данные позиции после создания не меняются, а стоимость считается
-свойством.
-2. Сервисный класс CheckoutService без состояния (только методы):
-int GetTotal(IEnumerable<CartItem> items) — сумма Total по всем позициям;
-IReadOnlyList<CartItem> FindCheaperThan(IEnumerable<CartItem> items, int
-maxPrice) - найти позиции дешевле заданной цены;
-перегруженные string GetReport(IEnumerable<CartItem> items) (короткая
-сводка) и string GetReport(IEnumerable<CartItem> items, bool includeLines)
-(сводка со строками позиций).
-3. 1-2 приватных метода: IsAvailable(CartItem item) и PrepareLine(CartItem
-item) - "доступна ли позиция для покупки?" и "Подготовить красивую строку для
-отчёта или чека на основе товарной позиции в корзине".
-4. Сервис не должен обращаться к закрытым полям чужих классов — только к открытым
-свойствам и методам.
+**Требуется:**
+1. `readonly struct CartItem` — позиция корзины со свойствами:
+	- `ProductId`, `Quantity`, `PricePerUnit` — только для чтения, задаются конструктором;
+	- `Total` — вычисляемое свойство (`PricePerUnit * Quantity`);
+	- конструктор проверяет, что количество положительное, а цена не отрицательная.
 
-```csharp
+> ℹ️ На занятии 2 позиция корзины была классом. Теперь оформляем её как `readonly struct`: данные позиции после создания не меняются, а стоимость считается свойством.
+
+2. Сервисный класс `CheckoutService` без состояния (только методы):
+	- `int GetTotal(IEnumerable<CartItem> items)` — сумма `Total` по всем позициям;
+	- `IReadOnlyList<CartItem> FindCheaperThan(IEnumerable<CartItem> items, int maxPrice)` - найти позиции дешевле заданной цены;
+	- перегруженные `string GetReport(IEnumerable<CartItem> items)` (короткая сводка) и `string GetReport(IEnumerable<CartItem> items, bool includeLines)` (сводка со строками позиций).
+3. **1-2 приватных** метода: `IsAvailable(CartItem item)` и `PrepareLine(CartItem item)` - "доступна ли позиция для покупки?" и "Подготовить красивую строку для отчёта или чека на основе товарной позиции в корзине".
+4. Сервис не должен обращаться к закрытым полям чужих классов — только к открытым свойствам и методам.
+
+```cs
 namespace Marketplace.Domain;
 
 public readonly struct CartItem
 {
-public int ProductId { get; }
-public int Quantity { get; }
-public int PricePerUnit { get; }
-//TODO: ⚠️ Конструктор с проверками ⚠️
-//TODO: ⚠️ public int Total => PricePerUnit * Quantity; ⚠️
+    public int ProductId { get; }
+    public int Quantity { get; }
+    public int PricePerUnit { get; }
+
+    //TODO: ⚠️ Конструктор с проверками ⚠️
+
+    //TODO: ⚠️ public int Total => PricePerUnit * Quantity; ⚠️
 }
 ```
 
-```csharp
-using System;
-using System.Collections.Generic;
+```cs
+using Marketplace.Domain;
 
 namespace Marketplace.Services;
 
@@ -211,8 +191,28 @@ public class CheckoutService
 }
 ```
 
-Компоновка (задача Лидера)
+#### Компоновка (задача Лидера)
 
+Лидер рабочей группы:
+1. собирает все классы в один проект: по одному типу на файл, пространства имён `Marketplace.Domain` и `Marketplace.Services`;
+2. пишет точку входа (с явно прописанным методом **Main** и служебными методами для каждого этапа демонстрации), где:
+	- создаёт **3 товара** и **2 покупателя** (обязательные свойства заданы в инициализаторах);
+	- собирает `List<CartItem>` и печатает **отчёты** через `CheckoutService`;
+	- показывает работу **вычисляемого свойства** `IsBudget` и обоих вариантов `GetInfo`;
+	- применяет **скидку** через `Discount.Calculate` и показывает **обе перегрузки**;
+	- в `try/catch` демонстрирует попытку записать **отрицательную цену**, **пустой артикул** и **недопустимый рейтинг** (в catch блоке делаем вывод в консоль сообщения с описанием ситуации);
+	- демонстрирует, что после создания объекта **нельзя изменить** `Title` (`init`) и `Status` (`private set`) - текст предупреждения от редактора кода записываем в отчёт - в листинге оставляем комментарий с кодом попытки вызвать сеттер и дополнительным комментарием "**Иллюстрация попытки вызвать сеттер для неизменяемого свойства**";
+3. проверяет единообразие названий и стиля;
+4. оформляет **отчёт**.
+
+#### Рекомендации по выполнению
+
+1. **Один класс — один файл**, имена свойств — существительные с большой буквы (`Price`, `IsTrusted`), имена методов — глаголы (`Calculate`, `GetReport`).
+2. **Проверка в сеттере или в конструкторе?** Выберите один подход на группу и придерживайтесь его: либо сеттер бросает исключение, либо отклоняет значение. В отчёте объясните выбор.
+3. **`required` + `init`** — хорошее сочетание для «паспортных» данных (`Title`, `FullName`), которые не должны меняться после создания.
+4. **Вычисляемое свойство** не должно иметь сеттера и не должно быть «дорогим»: только простая формула по другим свойствам.
+5. **Перегрузки** не должны дублировать код: короткая версия всегда вызывает полную.
+6. **Каждый участник** пишет либо небольшой класс, либо как минимум один серьёзный публичный метод сервиса с 1-2 приватными методами внутри.
 
 ## Задачи были распределены между участниками следующим образом
 
@@ -265,6 +265,38 @@ public class CheckoutService
 
 `CatalogPrinter` отвечает только за вывод, `CatalogReport` — только за расчёты, а `Catalog` — только за работу с коллекцией товаров. Это разделение демонстрирует принцип единственной ответственности (SRP). Работа с хранилищем в `Program` идёт через интерфейс `IProductRepository`, то есть по принципу инверсии зависимостей (DIP).
 
+## Таблица свойств проекта
+
+В таблицу включены свойства, реализованные в задании 4; свойства `Cart`, `UserProfile` и других классов занятия 2–3 не перечислены.
+
+| Свойство | Тип | Вид записи | Кто реализовал |
+|---|---|---|---|
+| `Product.Title` | `string` | авто, `required` + `init` | Мария Титова |
+| `Product.Id` | `int` | авто, `init` | Мария Титова, добавлено при сведении в `main` |
+| `Product.Article` | `string` | полная, проверка на пустоту | Мария Титова |
+| `Product.Price` | `int` | полная, проверка `< 0` | Мария Титова |
+| `Product.IsBudget` | `bool` | вычисляемая | Мария Титова |
+| `Product.Status` | `string` | авто с `private set` | Мария Титова |
+| `CustomerProfile.FullName` | `string` | авто, `required` + `init` | Роман Макаров |
+| `CustomerProfile.Phone` | `string` | авто с инициализатором `string.Empty` | Роман Макаров |
+| `CustomerProfile.Email` | `string` | полная, проверка `@` | Роман Макаров |
+| `CustomerProfile.Rating` | `int` | полная, диапазон `0..5` | Роман Макаров |
+| `CustomerProfile.IsTrusted` | `bool` | вычисляемая | Роман Макаров |
+| `Discount.Name` | `string` | авто, `required` + `init` | Александр Лебедев |
+| `Discount.ValidUntil` | `DateTime` | авто, `init` | Александр Лебедев |
+| `Discount.Percent` | `decimal` | полная, диапазон `0..100` | Александр Лебедев |
+| `Discount.MinSum` | `int` | полная, проверка `>= 0` | Александр Лебедев |
+| `Discount.IsActive` | `bool` | вычисляемая | Александр Лебедев |
+| `CartItem.ProductId` | `int` | только для чтения, задаётся конструктором | София Попова |
+| `CartItem.Quantity` | `int` | только для чтения, конструктор проверяет `> 0` | София Попова |
+| `CartItem.PricePerUnit` | `int` | только для чтения, конструктор проверяет `>= 0` | София Попова |
+| `CartItem.Total` | `int` | вычисляемая | София Попова |
+| `ProductItem.ProductId` | `int` | только для чтения, задаётся конструктором | София Попова |
+| `ProductItem.Quantity` | `int` | только для чтения, конструктор проверяет `> 0` | София Попова |
+| `ProductItem.PricePerUnit` | `int` | только для чтения, конструктор проверяет `>= 0` | София Попова |
+| `ProductItem.PurchaseDate` | `DateTime` | только для чтения, задаётся конструктором | София Попова |
+| `ProductItem.Total` | `int` | вычисляемая | София Попова |
+
 ## Что демонстрирует программа
 
 1. Создание списка каналов связи.
@@ -283,7 +315,7 @@ public class CheckoutService
 14. Свойства `Product`: обязательное `Title`, `Article` с проверкой, `Price` с проверкой неотрицательности, вычисляемое `IsBudget`, `Status` с `private set`, метод `ChangeStatus()` и две перегрузки `GetInfo()`.
 15. Обе перегрузки `GetInfo` для товара: `GetInfo()` выводит цену и признак бюджетного товара, `GetInfo(false)` — только название и артикул; короткая версия вызывает полную.
 16. Двух покупателей `CustomerProfile`: обязательное `FullName` (`required` + `init`), email с проверкой символа `@`, рейтинг в диапазоне `0..5`, вычисляемое `IsTrusted`, перегрузки `GetInfo` и `GetContactInfo(true)`; попытки задать рейтинг `7` и email без `@` отклоняются исключениями.
-17. Скидку `Discount`: `IsActive`, `Calculate(900)` (заказ меньше `MinSum` — скидка не применяется), `Calculate(2000)` с процентом из свойства и `Calculate(2000, 25m)` с явно заданным процентом; `Percent = 120` отклоняется проверкой.
+17. Скидку `Discount`: `IsActive`, `Calculate(900)` (заказ меньше `MinSum` — скидка не применяется), `Calculate(2000)` с процентом из свойства и `Calculate(2000, 25m)` с явно заданным процентом; `Percent = 120` и `MinSum = -1` отклоняются проверками сеттеров.
 18. `readonly struct CartItem`: позиции с `ProductId`, `Quantity`, `PricePerUnit` и вычисляемым `Total`; конструктор отклоняет количество `0` и отрицательную цену; свойство `Quantity` нельзя изменить после создания (`CS0200`).
 19. `CheckoutService`: сумму `GetTotal`, поиск позиций дешевле заданной цены `FindCheaperThan`, короткую сводку `GetReport(items)` и подробную `GetReport(items, true)` со строками позиций.
 20. Единый публичный контракт проекта: у `Product` нет дублирующих `GetId()`/`GetTitle()`/`GetPrice()`/`SetPrice()`, данные меняются только через свойства с проверками, а после успешной оплаты история профиля пополняется записями `ProductItem`.
@@ -363,42 +395,59 @@ catch (ArgumentOutOfRangeException ex)
 
 `Catalog` не отдаёт внутренний список: поле `products` закрыто, а `GetProducts()` возвращает `IReadOnlyList<Product>`, созданный через `products.ToList()`. Поэтому снаружи нельзя добавить товар в обход `Add()` и нельзя изменить внутреннюю коллекцию через возвращённое значение.
 
+### Вывод программы
+
+Фрагмент вывода, который подтверждает обе перегрузки `GetInfo` и отклонение недопустимых значений:
+
+```text
+Название: Блокнот, Артикул: ART-7, Цена: 20, Бюджетный: да
+Название: Блокнот, Артикул: ART-7
+Price = -100 отклонён: Цена товара не может быть отрицательной. (Parameter 'value')
+Пустой артикул отклонён: Артикул обязателен. (Parameter 'value')
+Рейтинг 7 отклонён: Рейтинг должен находиться в диапазоне от 0 до 5. (Parameter 'value')
+Percent = 120 отклонён: Percent должен быть 0..100. (Parameter 'value')
+MinSum = -1 отклонён: MinSum должен быть >= 0. (Parameter 'value')
+```
+
+Попытки изменить `Title` и `Status` после создания объекта не компилируются; сообщения компилятора `CS8852` и `CS0272` приведены в таблице выше.
+
 ## Распределение работы
 
-участники подготовили свои классы отдельными коммитами, после чего лидер группы свёл их в `main` и привёл проект к требованиям задания.
+С 11 ноября участники подготовили свои классы отдельными коммитами, после чего лидер группы свёл их в `main` и привёл проект к требованиям задания.
 
 ### Часть Ромы Макарова (участник 2)
 
-Роман отвечает за класс `CustomerProfile` (`CustomerProfile.cs`, коммит `3fed92e`):
+11 ноября Роман добавил класс `CustomerProfile` (`CustomerProfile.cs`, коммит `3fed92e`):
 
-- `FullName` — автоматическое свойство с `required` + `init`;
+- `FullName` — автоматическое свойство с `required` + `init`: имя покупателя обязательно и не меняется после создания;
 - `Phone` — автосвойство с инициализатором `string.Empty`;
-- `Email` — полная запись: сеттер вызывает приватную проверку `EnsureValidEmail` (строка должна содержать `@`);
+- `Email` — полная запись: сеттер вызывает приватную проверку `EnsureValidEmail` (строка должна содержать `@`), поэтому некорректный адрес не попадает в объект;
 - `Rating` — `int`, полная запись с проверкой диапазона `0..5` и резервным полем;
-- вычисляемое свойство `IsTrusted => Rating >= 4`;
+- вычисляемое свойство `IsTrusted => Rating >= 4` не хранит отдельного значения;
 - перегрузки `GetInfo()` и `GetInfo(bool includeRating)`, метод `GetContactInfo(bool includePhone)` и приватный `NormalizePhone`.
 
 ### Часть Саши Лебедева (участник 3)
 
-Александр добавил класс `Discount.cs` (коммит `ac78f5e`):
+11 ноября Александр добавил класс `Discount` (`Discount.cs`, коммит `ac78f5e`):
 
 - `Name` — сокращённая запись, `required`;
 - `Percent` — `decimal`, полная запись с проверкой `0..100`;
-- `MinSum` — `int`, полная запись с проверкой `>= 0`;
+- `MinSum` — `int`, полная запись с проверкой `>= 0` (минимальная сумма заказа);
 - `ValidUntil` — `DateTime` с `init` и вычисляемое `IsActive => ValidUntil > DateTime.Now`;
-- `Calculate(int total)` и перегрузка `Calculate(int total, decimal percent)`;
-- приватные `ApplyDiscount` и `EnsurePercent`.
+- `Calculate(int total)` и перегрузка `Calculate(int total, decimal percent)`; расчёт вынесен в приватные `ApplyDiscount` и `EnsurePercent`.
+
+При сведении работы в `main` файл `Discount` (без расширения) был переименован в `Discount.cs`: без расширения он не попадал в сборку проекта.
 
 ### Часть Маши Титовой (участник 1)
 
-Мария прислала класс `Product` в ветке `Task1` (коммит `9f2b89d`): четыре вида свойств, две перегрузки `GetInfo` и смена статуса с проверкой допустимых значений.
+11 ноября Мария прислала класс `Product` в ветке `Task1` (коммит `9f2b89d`): четыре вида свойств, две перегрузки `GetInfo` и смена статуса с проверкой допустимых значений.
 
-её часть доведена до листинга задания и перенесена в `main`:
+13 ноября её часть доведена до листинга задания и перенесена в `main`:
 
-- `Title` — обязательное автоматическое свойство (`required`, `init`);
+- `Title` — обязательное автоматическое свойство (`required`, `init`), название задаётся при создании и не меняется;
 - `Article` — полная запись с проверкой на пустоту;
 - `Price` — `int`, полная запись с проверкой, что цена не отрицательна;
-- `IsBudget` — вычисляемое свойство (`Price < 25`);
+- `IsBudget` — вычисляемое свойство (`Price < 25`) без сеттера;
 - `Status` — свойство с `private set`; допустимые значения хранятся в приватном статическом поле, менять статус можно только через `ChangeStatus()`;
 - `GetInfo()` вызывает `GetInfo(true)`, а `GetInfo(bool includeIntProperty)` выводит цену и признак бюджетного товара только при `true`.
 
@@ -406,29 +455,11 @@ catch (ArgumentOutOfRangeException ex)
 
 ### Часть Сони Поповой (участник 4, лидер группы)
 
-Я отвечала за сведение работы в `main`:
+13 ноября я отвечала за сведение работы в `main`:
 
 - влила `Task1` в `main` и разрешила конфликт `Product`: версия из ветки не собиралась, поэтому за основу взята рабочая версия, а из `Task1` перенесены `Article`, `IsBudget`, `Status`, `ChangeStatus()` и `GetInfo(bool)`;
-- В коммите Романа от 4 ноября SetPrice() и GetInfo() действительно были. При слиянии его ветки с основной версией Product я (лидер группы) сохранила другую реализацию: вариант Романа использовал int price и был несовместим с текущими CartItem, Catalog, FileProductRepository и CatalogReport. Из-за этого при разрешении конфликта методы не были перенесены в итоговый файл — это ошибка интеграции с моей стороны.
-
-Сейчас я вернула в итоговый Product.cs методы SetPrice(int) и GetInfo(), а также добавила перегрузку SetPrice(decimal), чтобы сохранить используемый в проекте decimal. Проверка названия и цены вынесена в приватные методы EnsureTitle и EnsurePrice.
-
-Требование «SetPrice(-100) бросает исключение» теперь можно показать в Program:
-
-try
-{
-    Product priceCheck = new Product(5, "Проверка цены", 100m);
-    priceCheck.SetPrice(-100);
-}
-catch (ArgumentOutOfRangeException ex)
-{
-    Console.WriteLine($"SetPrice(-100) отклонён: {ex.Message}");
-}
-При запуске выводится:
-
-SetPrice(-100) отклонён: Цена товара не может быть отрицательной.
-Прямое присваивание product.Price = -100 не компилируется: в Product оставлен один способ доступа к цене — GetPrice() для чтения и SetPrice() для проверяемого изменения. Свойств Id, Name и Price больше нет, поэтому публичный API не дублируется.
-
+- исправила замечания преподавателя: единый публичный API без дублирования, разбор файла товаров по первому и последнему `;`, сценарии в `Program`, переименование `Discount` в `Discount.cs`;
+- дополнила README таблицей структуры проекта, доказательством инкапсуляции, описанием демонстрации и выводами.
 
 В рамках задачи участника 4 реализованы `CartItem` и `CheckoutService`:
 
@@ -439,6 +470,8 @@ SetPrice(-100) отклонён: Цена товара не может быть 
 
 ## Выводы
 
+**Проверка в сеттере или в конструкторе.** Во всей группе выбран единый подход: проверка **бросает исключение** (`ArgumentException` или `ArgumentOutOfRangeException`) и не даёт сохранить недопустимое значение. Этот подход выбран потому, что он сразу сообщает об ошибке и не оставляет объект в «полувалидном» состоянии; молчаливое отклонение значения скрыло бы ошибку в вызывающем коде. В сеттерах проверяются `Price`, `Article`, `Email`, `Rating`, `Percent` и `MinSum`, а в конструкторе — параметры `CartItem`, потому что у `readonly struct` данные задаются только при создании.
+
 **Когда свойство удобнее открытого поля.** Свойство сохраняет привычный синтаксис поля, но проверяет значение в момент записи: `Product.Price`, `Product.Article`, `CustomerProfile.Rating` и `CustomerProfile.Email` не принимают некорректные данные, а открытое поле приняло бы их молча. Свойство скрывает способ хранения: за `Price`, `Article` и `Rating` стоят закрытые резервные поля, поэтому внутреннее представление можно изменить, не затрагивая код снаружи. Вычисляемые свойства (`IsBudget`, `IsTrusted`, `CartItem.Total`, `Discount.IsActive`, `CartPrice.FinalPrice`) не хранят производные значения, поэтому данные не могут рассогласоваться. Связка `required` + `init` (`Product.Title`, `CustomerProfile.FullName`, `Discount.Name`) фиксирует «паспортные» данные после создания объекта, а `private set` (`Product.Status`) оставляет изменение состояния самому классу. Открытое поле уместно только для простого значения без проверок и вычислений, например во внутренней структуре данных; в публичном контракте этого проекта таких полей нет.
 
 **Когда метод удобнее свойства.** Метод нужен, когда выполняется действие или алгоритм с параметрами и возможным побочным эффектом: `ChangeStatus()` проверяет список допустимых статусов, `Discount.Calculate()` считает сумму с учётом `MinSum`, `CheckoutService.GetTotal()`, `FindCheaperThan()` и `GetReport()` работают с коллекцией, `PaymentService.PayForPurchase()` меняет балансы и очищает корзину, `User.SetPassword()` хеширует пароль. Свойство должно быть быстрым, не принимать параметров и не иметь заметных побочных эффектов; всё остальное оформляется методом. Приватные проверки `EnsureStatus`, `EnsurePercent`, `EnsureValidEmail`, `IsAvailable` и `PrepareLine` — тоже методы, потому что это операции над данными, а не сами данные.
@@ -447,7 +480,7 @@ SetPrice(-100) отклонён: Цена товара не может быть 
 
 **Структура или класс.** `CartItem` — `readonly struct`: позиция корзины является небольшим значением, которое после создания не меняется, поэтому `set` в ней запрещён, данные задаёт конструктор, а `Total` вычисляется. `Product`, `CustomerProfile`, `Cart` и `UserProfile` — классы: у них есть идентичность и изменяемое состояние, и на них ссылаются другие объекты.
 
-**Итог.** В проекте присутствуют все четыре вида свойств из лабораторной: автосвойство (`Title`), полная запись с проверкой (`Price`, `Article`), вычисляемое свойство (`IsBudget`, `IsTrusted`, `Total`, `IsActive`) и свойство только для инициализации (`Id`, `ValidUntil`) вместе с обязательными (`required`) свойствами. Обе перегрузки `GetInfo` работают, недопустимые значения не попадают в объект, публичный API не дублируется, каждый тип находится в отдельном файле, а расчёты, печать и хранение разделены по слоям (`Domain`, `Services`, `DataAccess`, `Presentation`).
+**Итог.** В проекте присутствуют все четыре вида свойств из лабораторной: автосвойство (`Title`), полная запись с проверкой (`Price`, `Article`), вычисляемое свойство (`IsBudget`, `IsTrusted`, `Total`, `IsActive`) и свойство только для инициализации (`Id`, `ValidUntil`) вместе с обязательными (`required`) свойствами. Обе перегрузки `GetInfo` работают, недопустимые значения не попадают в объект, публичный API не дублируется, каждый публичный тип находится в отдельном файле (`PriceFormatter` — локальный помощник внутри `CatalogPrinter.cs`), а расчёты, печать и хранение разделены по слоям (`Domain`, `Services`, `DataAccess`, `Presentation`).
 
 ## Запуск
 
