@@ -11,10 +11,10 @@ namespace Marketplace.Domain
         private static int cartItemId = 0;
 
         public int Id { get; }
-        public int ProductId => Product.Id;
+        public int ProductId => Product.GetId();
         public Product Product { get; }
         public int Quantity { get; }
-        public decimal TotalPrice => Product.Price * Quantity;
+        public decimal TotalPrice => Product.GetPrice() * Quantity;
 
         public CartItem(Product product, int quantity)
         {

@@ -12,19 +12,29 @@ namespace Marketplace.Presentation
         {
             ProfileAdd profileService = new ProfileAdd();
             PaymentService paymentService = new PaymentService();
+            List<Channel> channels = CreateChannels();
 
-            
-            List<Channel> channels = new List<Channel>
+            UserProfile studentProfile = RunProfileScenario(profileService, channels);
+            RunPaymentScenarios(profileService, paymentService, studentProfile, channels);
+            RunCatalogScenario();
+            RunFileFormatCheck();
+        }
+
+        private static List<Channel> CreateChannels()
+        {
+            return new List<Channel>
             {
                 new Channel("Телефон"),
                 new Channel("Email"),
                 new Channel("Telegram")
             };
+        }
 
+        private static UserProfile RunProfileScenario(ProfileAdd profileService, List<Channel> channels)
+        {
             User student = new User("Акакий", "Акакиевич", "Добрый", "akakii_dev", "parolnagorshkesidelkorol");
             UserProfile studentProfile = profileService.CreateProfile(student);
 
-            
             Contact phoneContact = new Contact("+88005553555", channels[0].ID);
             Contact emailContact = new Contact("akakii@gmail.com", channels[1].ID);
             Contact tgContact = new Contact("@a_kak_tg", channels[2].ID);
@@ -32,7 +42,7 @@ namespace Marketplace.Presentation
             profileService.AddContactToProfile(studentProfile, phoneContact);
             profileService.AddContactToProfile(studentProfile, emailContact);
             profileService.AddContactToProfile(studentProfile, tgContact);
-            
+
             profileService.PrintProfileSummary(studentProfile, channels);
 
             Console.WriteLine($"\nУдаляем контакт Telegram (ID: {tgContact.ContactId})...");
@@ -40,9 +50,18 @@ namespace Marketplace.Presentation
 
             profileService.PrintProfileSummary(studentProfile, channels);
 
+            return studentProfile;
+        }
+
+        private static void RunPaymentScenarios(
+            ProfileAdd profileService,
+            PaymentService paymentService,
+            UserProfile studentProfile,
+            List<Channel> channels)
+        {
             Console.WriteLine("\n=== Сценарий 1: успешная оплата ===");
 
-            Cart cart = new Cart(student.UserId);
+            Cart cart = new Cart(studentProfile.User.UserId);
             cart.Add(new CartItem(new Product(1, "Ноутбук", 1000m), 1));
             cart.Add(new CartItem(new Product(2, "Мышь", 50m), 2));
 
@@ -64,7 +83,7 @@ namespace Marketplace.Presentation
 
             Console.WriteLine("\n=== Проверка владельца корзины ===");
 
-            Cart foreignCart = new Cart(student.UserId + 1);
+            Cart foreignCart = new Cart(studentProfile.User.UserId + 1);
             foreignCart.Add(new CartItem(new Product(4, "Наушники", 1000m), 1));
 
             try
@@ -78,7 +97,7 @@ namespace Marketplace.Presentation
 
             Console.WriteLine("\n=== Сценарий 2: оплата невозможна, затем пополнение и повтор ===");
 
-            Cart expensiveCart = new Cart(student.UserId);
+            Cart expensiveCart = new Cart(studentProfile.User.UserId);
             expensiveCart.Add(new CartItem(new Product(3, "Телевизор", 50000m), 1));
 
             Console.WriteLine($"Корзина: товаров {expensiveCart.PositionsCount}, итоговая цена {expensiveCart.TotalPrice:F2} котокоинов");
@@ -104,7 +123,10 @@ namespace Marketplace.Presentation
                 $"{(expensiveCart.IsEmpty && expensiveCart.TotalPrice == 0m ? "корзина пуста" : "корзина не пуста")}");
 
             profileService.PrintProfileSummary(studentProfile, channels);
+        }
 
+        private static void RunCatalogScenario()
+        {
             Console.WriteLine("\n=== Задание 3: каталог, DataAccess и отчёты ===");
 
             Catalog catalog = new Catalog();
@@ -128,9 +150,21 @@ namespace Marketplace.Presentation
                 Console.WriteLine($"SetPrice(-100) отклонён: {ex.Message}");
             }
 
+            Product infoCheck = new Product(6, "Проверка GetInfo", 50m);
+            Console.WriteLine(infoCheck.GetInfo());
+
             catalog.Add(new Product(1, "Кружка", 450m));
             catalog.Add(new Product(2, "Термос", 1200m));
             catalog.Add(new Product(3, "Набор стикеров", 90m));
+
+            try
+            {
+                catalog.Add(new Product(2, "КРУЖКА", 500m));
+            }
+            catch (InvalidOperationException ex)
+            {
+                Console.WriteLine($"Дубликат отклонён: {ex.Message}");
+            }
 
             Console.WriteLine($"Товаров в каталоге: {catalog.GetCount()}");
 
@@ -162,8 +196,25 @@ namespace Marketplace.Presentation
             Console.WriteLine($"\nЗагружено товаров из файла: {loadedProducts.Count}");
             printer.PrintAll(loadedProducts);
 
-            // Снаружи нельзя изменить внутреннюю коллекцию каталога:
-            // catalog.GetProducts().Clear(); // не компилируется: у IReadOnlyList<T> нет Clear.
+            // При сборке с -p:DefineConstants=NEGATIVE_CHECKS строка ниже
+            // даёт CS1061: у IReadOnlyList<Product> нет метода Clear.
+#if NEGATIVE_CHECKS
+            catalog.GetProducts().Clear();
+#endif
+        }
+
+        private static void RunFileFormatCheck()
+        {
+            string filePath = Path.Combine(Path.GetTempPath(), "marketplace_products_semicolon.txt");
+            IProductRepository repository = new FileProductRepository(filePath);
+            Product product = new Product(99, "Кружка; большая", 500m);
+
+            repository.Save(new[] { product });
+            List<Product> loaded = repository.Load();
+
+            Console.WriteLine(loaded.Count == 1 && loaded[0].GetTitle() == product.GetTitle()
+                ? $"\nПроверка ';' в названии: загружено «{loaded[0].GetTitle()}»"
+                : "\nПроверка ';' в названии: товар загружен неверно.");
         }
     }
 }

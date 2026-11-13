@@ -9,6 +9,8 @@ namespace Marketplace.DataAccess
     /// <summary>
     /// Файловое хранилище товаров.
     /// Формат строки: id;title;price — по одному товару на строку.
+    /// Разбор идёт от первого и последнего разделителя, поэтому символ ';'
+    /// внутри названия товара не ломает формат.
     /// </summary>
     internal class FileProductRepository : IProductRepository
     {
@@ -65,14 +67,18 @@ namespace Marketplace.DataAccess
 
         private static Product Deserialize(string line)
         {
-            var parts = line.Split(';');
+            int firstSeparator = line.IndexOf(';');
+            int lastSeparator = line.LastIndexOf(';');
 
-            if (parts.Length != 3)
+            if (firstSeparator <= 0 || lastSeparator <= firstSeparator)
                 throw new FormatException($"Некорректная строка товара: {line}");
 
-            int id = int.Parse(parts[0], CultureInfo.InvariantCulture);
-            string title = parts[1];
-            decimal price = decimal.Parse(parts[2], CultureInfo.InvariantCulture);
+            string idText = line[..firstSeparator];
+            string title = line[(firstSeparator + 1)..lastSeparator];
+            string priceText = line[(lastSeparator + 1)..];
+
+            int id = int.Parse(idText, CultureInfo.InvariantCulture);
+            decimal price = decimal.Parse(priceText, CultureInfo.InvariantCulture);
 
             return new Product(id, title, price);
         }

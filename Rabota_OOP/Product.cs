@@ -7,11 +7,9 @@ namespace Marketplace.Domain
     /// </summary>
     public class Product
     {
+        private int id;
+        private string title = string.Empty;
         private decimal price;
-
-        public int Id { get; }
-        public string Name { get; }
-        public decimal Price => price;
 
         public Product(int id, string name, decimal price)
         {
@@ -23,16 +21,16 @@ namespace Marketplace.Domain
             EnsureTitle(name);
             EnsurePrice(price);
 
-            Id = id;
-            Name = name.Trim();
+            this.id = id;
+            title = name.Trim();
             this.price = price;
         }
 
-        public int GetId() => Id;
+        public int GetId() => id;
 
-        public string GetTitle() => Name;
+        public string GetTitle() => title;
 
-        public decimal GetPrice() => Price;
+        public decimal GetPrice() => price;
 
         public void SetPrice(int newPrice)
         {
@@ -46,7 +44,8 @@ namespace Marketplace.Domain
             price = newPrice;
         }
 
-        public string GetInfo() => $"Товар №{Id}: {Name} — {Price:F2} котокоинов";
+        public string GetInfo() =>
+            $"Товар №{GetId()}: {GetTitle()} — {GetPrice():F2} котокоинов";
 
         private static void EnsureTitle(string title)
         {

@@ -16,16 +16,16 @@ namespace Marketplace.Domain
             if (product is null)
                 throw new ArgumentNullException(nameof(product));
 
-            if (products.Any(p => SameTitle(p.Name, product.Name)))
+            if (products.Any(p => SameTitle(p.GetTitle(), product.GetTitle())))
                 throw new InvalidOperationException(
-                    $"Товар \"{product.Name}\" уже есть в каталоге.");
+                    $"Товар \"{product.GetTitle()}\" уже есть в каталоге.");
 
             products.Add(product);
         }
 
         public bool Remove(string title)
         {
-            int index = products.FindIndex(p => SameTitle(p.Name, title));
+            int index = products.FindIndex(p => SameTitle(p.GetTitle(), title));
 
             if (index < 0)
                 return false;
@@ -35,7 +35,7 @@ namespace Marketplace.Domain
         }
 
         public Product? Find(string title) =>
-            products.FirstOrDefault(p => SameTitle(p.Name, title));
+            products.FirstOrDefault(p => SameTitle(p.GetTitle(), title));
 
         public IReadOnlyList<Product> GetProducts() => products.ToList();
 
