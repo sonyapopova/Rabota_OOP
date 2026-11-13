@@ -7,394 +7,217 @@
 Участники группы: Попова София Николаевна, Макаров Роман Сергеевич, Титова Мария Дмитриевна, Лебедев Александр Андреевич.
 
 Исходный текст задания: 
-Мы продолжаем проект маркетплейса с занятия 2. В нём уже есть Product , CartItem ,
-Cart , PriceCalculation и OrderService (или аналог). На этом занятии добавляем
-каталог товаров, инкапсуляцию и слой доступа к данным.
-Т.е. делаем хранилище товаров и инструменты просмотра и изменения состава
-товаров в этом хранилище.
+Мы продолжаем проект маркетплейса (занятия 2 и 3). Каталог, доступ к данным и
+печать уже готовы; на этом занятии заменяем методы Get... / Set... на свойства и
+добавляем перегрузки GetInfo .
 Правила проекта:
 
-Как распределены типы проекта:
-
-Тип Пространство имён Модификатор Почему
-Product Marketplace.Domain public сущность нужн
-и приложению,
-слою хранения
-Catalog Marketplace.Domain public публичный API
-каталога, но
-коллекция
-внутри закрыта
-IProductRepository Marketplace.DataAccess public абстракция, от
-которой завися
-остальные (DIP
-FileProductRepository Marketplace.DataAccess internal деталь
-реализации,
-снаружи сборки
-не нужна
-5. Из другого файла тип с модификатором file не виден, поэтому наследник не
-скомпилируется: компилятор сообщит, что такой тип не найден.
-6. DIP: зависимость идёт от конкретного класса, а не от интерфейса
-IProductRepository .
-7. SRP: у класса несколько причин для изменения — данные, хранение и вывод.
-
-1. Пространства имён фиксированы: Marketplace.Domain (сущности),
-Marketplace.DataAccess (хранение), Marketplace.Presentation (вывод).
-2. Один тип — один файл.
-3. Снаружи типов — только то, что действительно является контрактом; всё остальное
-— private , internal или file .
-
-Тип Пространство имён Модификатор Почему
-CatalogPrinter Marketplace.Presentation public точка вывода
-для приложени
-PriceFormatter Marketplace.Presentation file вспомогательны
-тип одного фай
-
 Распределение задач по участникам
-Участник 1 — сущность Product ( Product.cs )
-Требуется: товар из занятия 2 приводим к «взрослому» виду — поля закрываем,
-проверки собираем в одном месте.
-1. Все поля — закрытые: идентификатор, название, цена за единицу.
-2. Конструктор проверяет данные и бросает исключение при недопустимых значениях:
-идентификатор больше нуля;
-название не пустое;
-цена не отрицательная.
-3. Открытые методы: GetId() , GetTitle() , GetPrice() , SetPrice(int) , GetInfo() .
-4. 1-2 приватных метода проверки, например EnsureTitle(string title) и
-EnsurePrice(int price) .
+Участник 1 — класс Product ( Product.cs ) — главный по теме занятия
+Класс должен содержать все четыре вида свойств из лабораторной и две перегрузки
+GetInfo :
+5. Как объявить обязательное свойство FullName , без которого объект не создать?
+6. Почему нельзя объявить два метода GetInfo() с разными типами возврата?
+7. Почему у свойства в readonly struct не может быть аксессора set ?
 
+1. public string Group { get; set; } = "не распределён";
+2. public int Age { get; private set; }
+3. public bool IsJunior => Age < 20;
+4. public string CardNumber { get; init; }
+5. public required string FullName { get; init; }
+6. Тип возврата не входит в сигнатуру метода, поэтому обе версии имеют одну и ту же
+сигнатуру — ошибка CS0111.
+7. readonly struct запрещает изменять свои поля после создания, поэтому set не
+компилируется: допустимы init (значение задаётся при создании) или свойство
+только для чтения.
+
+1. Один тип — один файл; пространства имён Marketplace.Domain и
+Marketplace.Services .
+2. Имена свойств — существительные с большой буквы ( Price , IsBudget ), имена
+методов — глаголы ( Calculate , GetReport ).
+3. Названия типов из занятий 2 и 3 не меняются: Product , CustomerProfile , Cart ,
+CartItem (у CartItem меняется только вид: класс становится readonly struct ).
+
+Требуется дополнительно:
 namespace ;
 public class Product
 {
-//TODO: ⚠️ Закрытые поля: id, title, price ⚠️
-public Product(int id, string title, int price)
+// 1. string — сокращённая (автоматическая) запись, обязательна при
+создании
+public required string Title { get; init; }
+// 2. string — полная запись с проверкой на пустоту
+private string article = string.Empty;
+public string Article
 {
-//TODO: ⚠️ Проверки и присвоение полей ⚠️
+get => article;
+set
+{
+if (string.IsNullOrWhiteSpace(value))
+throw new ArgumentException("Артикул обязателен",
+nameof(value));
+article = value;
 }
-//TODO: ⚠️ public int GetId() ⚠️
-//TODO: ⚠️ public string GetTitle() ⚠️
-//TODO: ⚠️ public int GetPrice() ⚠️
-//TODO: ⚠️ public void SetPrice(int newPrice) с проверкой ⚠️
-//TODO: ⚠️ public string GetInfo() — одна строка о товаре ⚠️
-//TODO: ⚠️ private static void EnsureTitle(string value) ⚠️
-//TODO: ⚠️ private static void EnsurePrice(int value) ⚠️
+}
+// 3. int — полная запись, не допускает отрицательных значений
+private int price;
+public int Price
+{
+//TODO: ⚠️ get и set с проверкой value < 0 ⚠️
+}
+// 4. bool — вычисляемое свойство: true, если Price < 25
+//TODO: ⚠️ public bool IsBudget => ... ⚠️
+// 5. Перегрузки
+//TODO: ⚠️ public string GetInfo() => GetInfo(true); ⚠️
+//TODO: ⚠️ public string GetInfo(bool includeIntProperty) { ... } ⚠️
+// 6. Статус меняется только внутри класса
+public string Status { get; private set; } = "В наличии";
+//TODO: ⚠️ public void ChangeStatus(string newStatus) ⚠️
+//TODO: ⚠️ private static void EnsureStatus(string value) ⚠️
 }
 
 Marketplace.Domain
 
-Что показать в отчёте: product.price = -100; не компилируется, а
-product.SetPrice(-100) выбрасывает исключение.
-
-Участник 2 — агрегирующий класс Catalog ( Catalog.cs )
+Участник 2 — класс CustomerProfile ( CustomerProfile.cs )
 Требуется:
 
-Что показать в отчёте: catalog.GetProducts().Clear(); не компилируется — метода
-Clear у IReadOnlyList<T> нет.
-1. Закрытая коллекция товаров: private readonly List<Product> products = new();
-2. Открытые методы:
-Add(Product product) — не принимать null и не дублировать товары
-(сравнение по названию без учёта регистра и пробелов по краям);
-Remove(string title) — возвращать bool ;
-Find(string title) — возвращать Product? ;
-GetProducts() — возвращать копию коллекции как IReadOnlyList<Product> ;
-GetCount() — количество товаров.
-3. 1-2 приватных метода: Normalize(string title) , SameTitle(string left, string
-right) .
+Участник 3 — скидки и расчёт ( Discount.cs )
+1. Свойство Status с private set (статус меняется только внутри класса).
+2. Метод ChangeStatus(string newStatus) с приватной проверкой допустимых
+значений: "В наличии" , "Нет в наличии" , "Под заказ" (список допустимых
+значений храните в приватном статическом поле).
+3. Убедиться, что product.Price = -10; и product.Status = "Продан"; не
+компилируются, а product.ChangeStatus("Продано"); выбрасывает исключение.
+
+1. FullName — автоматическое свойство, required + init .
+2. Phone — автоматическое свойство с инициализатором string.Empty .
+3. Email — полная запись: сеттер проверяет, что строка содержит @ (приватный метод
+EnsureValidEmail ).
+4. Rating — int , полная запись с проверкой диапазона 0..5 , резервное поле
+rating .
+5. Вычисляемое свойство IsTrusted => Rating >= 4 .
+6. Перегруженные методы:
+string GetInfo() ;
+string GetInfo(bool includeRating) ;
+string GetContactInfo(bool includePhone) .
+7. 1-2 приватных метода ( EnsureValidEmail , NormalizePhone ).
 
 namespace ;
-public class Catalog
+public class CustomerProfile
 {
-private readonly List<Product> products = new();
-public void Add(Product product)
-{
-//TODO: ⚠️ Проверить product на null и на дубликат по названию ⚠️
-}
-//TODO: ⚠️ public bool Remove(string title) ⚠️
-//TODO: ⚠️ public Product? Find(string title) ⚠️
-// Возвращаем копию: снаружи нельзя изменить внутренний список
-public IReadOnlyList<Product> GetProducts() => products.ToList();
-//TODO: ⚠️ public int GetCount() ⚠️
-//TODO: ⚠️ private static string Normalize(string title) ⚠️
-//TODO: ⚠️ private static bool SameTitle(string left, string right) ⚠️
+public required string FullName { get; init; }
+public string Phone { get; set; } = string.Empty;
+//TODO: ⚠️ Email — полная запись с EnsureValidEmail ⚠️
+//TODO: ⚠️ Rating — полная запись с проверкой 0..5 ⚠️
+//TODO: ⚠️ public bool IsTrusted => Rating >= 4; ⚠️
+//TODO: ⚠️ public string GetInfo() и GetInfo(bool includeRating) ⚠️
+//TODO: ⚠️ public string GetContactInfo(bool includePhone) ⚠️
+//TODO: ⚠️ private static void EnsureValidEmail(string value) ⚠️
+//TODO: ⚠️ private static string NormalizePhone(string value) ⚠️
 }
 
 Marketplace.Domain
 
-Участник 3 — доступ к данным: пространство имён
-Marketplace.DataAccess ( DataAccess/ )
 Требуется:
-1. Объявить открытый интерфейс (DIP):
 
-using ;
-namespace ;
-public interface IProductRepository
-{
-void Save(IEnumerable<Product> products);
-List<Product> Load();
-}
-Marketplace.Domain Marketplace.DataAccess
-
-2. Реализовать его в внутреннем классе — деталь реализации не обязана быть видна
-снаружи сборки (пример реализации репозитория на базе файла - см. в конце этих
-материалов):
-
-using ;
-namespace ;
-internal class FileProductRepository : IProductRepository
-{
-private readonly string filePath;
-public FileProductRepository(string filePath) => this.filePath =
-filePath;
-public void Save(IEnumerable<Product> products)
-{
-//TODO: ⚠️ Сохранить каждый товар строкой в файл ⚠️
-//TODO: ⚠️ Использовать ПРИВАТНЫЙ метод Serialize ⚠️
-}
-public List<Product> Load()
-{
-//TODO: ⚠️ Прочитать строки файла и собрать List<Product> ⚠️
-//TODO: ⚠️ При отсутствии файла вернуть пустой список ⚠️
-//TODO: ⚠️ Использовать ПРИВАТНЫЙ метод Deserialize ⚠️
-return new List<Product>();
-Marketplace.Domain Marketplace.DataAccess
-
-Участник 4 — вывод и отчёты (SRP)
+Участник 4 — позиция корзины и сервис оформления заказа
+( CartItem.cs , CheckoutService.cs )
 Требуется:
-}
-//TODO: ⚠️ private static string Serialize(Product product) ⚠️
-//TODO: ⚠️ private static Product Deserialize(string line) ⚠️
+1. Класс Discount со свойствами:
+Name — сокращённая запись, required ;
+Percent — decimal , полная запись с проверкой 0..100 ;
+MinSum — int , полная запись с проверкой >= 0 (минимальная сумма заказа);
+ValidUntil — DateTime с init ;
+IsActive — вычисляемое bool ( ValidUntil > DateTime.Now ).
+2. Метод int Calculate(int total) — цена после скидки с учётом минимальной
+суммы; внутри 1-2 приватных метода ( ApplyDiscount , EnsurePercent ).
+3. Перегрузка int Calculate(int total, decimal percent) .
+4. Показать, что передача недопустимых значений через свойства не проходит.
+
+namespace ;
+public class Discount
+{
+public required string Name { get; init; }
+public DateTime ValidUntil { get; init; }
+//TODO: ⚠️ Percent — decimal, полная запись, 0..100 ⚠️
+//TODO: ⚠️ MinSum — int, полная запись, >= 0 ⚠️
+//TODO: ⚠️ public bool IsActive => ValidUntil > DateTime.Now; ⚠️
+//TODO: ⚠️ public int Calculate(int total) ⚠️
+//TODO: ⚠️ public int Calculate(int total, decimal percent) ⚠️
+//TODO: ⚠️ private static int ApplyDiscount(int total, decimal percent)
+⚠️
+//TODO: ⚠️ private static void EnsurePercent(decimal value) ⚠️
 }
 
-3. Формат хранения выберите сами (например, 1;Кружка;450 — по строке на товар) и
-опишите его в комментарии к классу.
-4. Не забудьте using Marketplace.Domain; — типы слоя хранения берутся из домена.
+Marketplace.Domain
 
-1. Класс CatalogPrinter ( CatalogPrinter.cs ) — только печать:
-PrintAll(IEnumerable<Product> products) , PrintTop(IEnumerable<Product>
-products, int count) ; внутри 1-2 приватных метода подготовки строки.
-2. В том же файле — file static class PriceFormatter с методом Format(int
-price) (демонстрация файла как области видимости).
-3. Отдельный класс CatalogReport ( CatalogReport.cs ) — только расчёты:
-GetAveragePrice(IEnumerable<Product> products) и
-GetSummary(IEnumerable<Product> products) ; ни печати, ни работы с файлами.
-4. Убедиться, что ни Product , ни Catalog не занимаются печатью — это и есть SRP.
+1. readonly struct CartItem — позиция корзины со свойствами:
+ProductId , Quantity , PricePerUnit — только для чтения, задаются
+конструктором;
+Total — вычисляемое свойство ( PricePerUnit * Quantity );
+конструктор проверяет, что количество положительное, а цена не отрицательная.
+
+i️ На занятии 2 позиция корзины была классом. Теперь оформляем её как readonly
+struct : данные позиции после создания не меняются, а стоимость считается
+свойством.
+2. Сервисный класс CheckoutService без состояния (только методы):
+int GetTotal(IEnumerable<CartItem> items) — сумма Total по всем позициям;
+IReadOnlyList<CartItem> FindCheaperThan(IEnumerable<CartItem> items, int
+maxPrice) - найти позиции дешевле заданной цены;
+перегруженные string GetReport(IEnumerable<CartItem> items) (короткая
+сводка) и string GetReport(IEnumerable<CartItem> items, bool includeLines)
+(сводка со строками позиций).
+3. 1-2 приватных метода: IsAvailable(CartItem item) и PrepareLine(CartItem
+item) - "доступна ли позиция для покупки?" и "Подготовить красивую строку для
+отчёта или чека на основе товарной позиции в корзине".
+4. Сервис не должен обращаться к закрытым полям чужих классов — только к открытым
+свойствам и методам.
+
+namespace ;
+public readonly struct CartItem
+{
+public int ProductId { get; }
+public int Quantity { get; }
+public int PricePerUnit { get; }
+//TODO: ⚠️ Конструктор с проверками ⚠️
+//TODO: ⚠️ public int Total => PricePerUnit * Quantity; ⚠️
+}
+
+Marketplace.Domain
 
 using ;
 namespace ;
-public class CatalogPrinter
+public class CheckoutService
 {
-public void PrintAll(IEnumerable<Product> products)
+public int GetTotal(IEnumerable<CartItem> items)
 {
-//TODO: ⚠️ Напечатать все товары через PrepareLine ⚠️
+//TODO: ⚠️ Сумма Total по всем позициям ⚠️
+return 0;
 }
-public void PrintTop(IEnumerable<Product> products, int count)
-{
-//TODO: ⚠️ Напечатать count самых дорогих товаров ⚠️
-}
-//TODO: ⚠️ private string PrepareLine(Product product) ⚠️
-}
-// Виден только в этом файле Marketplace.Domain Marketplace.Presentation
+Marketplace.Domain Marketplace.Services
 
-Вопрос для отчёта: почему PriceFormatter не виден в файле CatalogReport.cs и что
-пришлось бы сделать, если бы он понадобился в двух файлах?
-Ответ: модификатор file ограничивает тип одним файлом; для двух файлов нужен
-internal (внутри сборки) или public (для всех).
 Компоновка (задача Лидера)
 Лидер рабочей группы:
 
-Пример точки входа для компоновки:
-file static class PriceFormatter
-{
-public static string Format(int price) => $"{price} у.е.";
+Рекомендации по выполнению
+//TODO: ⚠️ public IReadOnlyList<CartItem> FindCheaperThan(...) ⚠️
+//TODO: ⚠️ public string GetReport(IEnumerable<CartItem> items) ⚠️
+//TODO: ⚠️ public string GetReport(IEnumerable<CartItem> items, bool
+includeLines) ⚠️
+//TODO: ⚠️ private bool IsAvailable(CartItem item) ⚠️
+//TODO: ⚠️ private string PrepareLine(CartItem item) ⚠️
 }
-
-1. собирает проект: по одному типу на файл, пространства имён Marketplace.Domain ,
-Marketplace.DataAccess , Marketplace.Presentation ;
-2. пишет точку входа, где:
-создаёт 3-4 товара, в том числе с недопустимыми данными (в try/catch ) —
-чтобы показать защиту целостности;
-добавляет их в Catalog , ищет, удаляет, выводит;
-сохраняет и загружает товары через IProductRepository через интерфейс (DIP);
-печатает отчёт через CatalogPrinter и CatalogReport ;
-3. проверяет, что изменить коллекцию каталога снаружи нельзя;
-4. оформляет отчёт.
 
 ## Задачи были распределены между участниками следующим образом
 
-Задача 3 (Мария):
-Участник 3 — доступ к данным: пространство имён
-Marketplace.DataAccess ( DataAccess/ )
-Требуется:
-1. Объявить открытый интерфейс (DIP):
+Мария:
+Задачи участника 1
+Роман:
+Задачи участника 2
+Александр:
+Задачи участника 3
+София:
+Задачи участника 4 — вывод и отчёты (SRP)
 
-using ;
-namespace ;
-public interface IProductRepository
-{
-void Save(IEnumerable<Product> products);
-List<Product> Load();
-}
-Marketplace.Domain Marketplace.DataAccess
-
-2. Реализовать его в внутреннем классе — деталь реализации не обязана быть видна
-снаружи сборки (пример реализации репозитория на базе файла - см. в конце этих
-материалов):
-
-using ;
-namespace ;
-internal class FileProductRepository : IProductRepository
-{
-private readonly string filePath;
-public FileProductRepository(string filePath) => this.filePath =
-filePath;
-public void Save(IEnumerable<Product> products)
-{
-//TODO: ⚠️ Сохранить каждый товар строкой в файл ⚠️
-//TODO: ⚠️ Использовать ПРИВАТНЫЙ метод Serialize ⚠️
-}
-public List<Product> Load()
-{
-//TODO: ⚠️ Прочитать строки файла и собрать List<Product> ⚠️
-//TODO: ⚠️ При отсутствии файла вернуть пустой список ⚠️
-//TODO: ⚠️ Использовать ПРИВАТНЫЙ метод Deserialize ⚠️
-return new List<Product>();
-Marketplace.Domain Marketplace.DataAccess
-
-3. Формат хранения выберите сами (например, 1;Кружка;450 — по строке на товар) и
-опишите его в комментарии к классу.
-4. Не забудьте using Marketplace.Domain; — типы слоя хранения берутся из домена.
-
-Задача 1(Роман):
-Участник 1 — сущность Product ( Product.cs )
-Требуется: товар из занятия 2 приводим к «взрослому» виду — поля закрываем,
-проверки собираем в одном месте.
-1. Все поля — закрытые: идентификатор, название, цена за единицу.
-2. Конструктор проверяет данные и бросает исключение при недопустимых значениях:
-идентификатор больше нуля;
-название не пустое;
-цена не отрицательная.
-3. Открытые методы: GetId() , GetTitle() , GetPrice() , SetPrice(int) , GetInfo() .
-4. 1-2 приватных метода проверки, например EnsureTitle(string title) и
-EnsurePrice(int price) .
-
-namespace ;
-public class Product
-{
-//TODO: ⚠️ Закрытые поля: id, title, price ⚠️
-public Product(int id, string title, int price)
-{
-//TODO: ⚠️ Проверки и присвоение полей ⚠️
-}
-//TODO: ⚠️ public int GetId() ⚠️
-//TODO: ⚠️ public string GetTitle() ⚠️
-//TODO: ⚠️ public int GetPrice() ⚠️
-//TODO: ⚠️ public void SetPrice(int newPrice) с проверкой ⚠️
-//TODO: ⚠️ public string GetInfo() — одна строка о товаре ⚠️
-//TODO: ⚠️ private static void EnsureTitle(string value) ⚠️
-//TODO: ⚠️ private static void EnsurePrice(int value) ⚠️
-}
-
-Marketplace.Domain
-
-Что показать в отчёте: product.price = -100; не компилируется, а
-product.SetPrice(-100) выбрасывает исключение.
-
-Задача 2 (Александр):
-Участник 2 — агрегирующий класс Catalog ( Catalog.cs )
-Требуется:
-
-Что показать в отчёте: catalog.GetProducts().Clear(); не компилируется — метода
-Clear у IReadOnlyList<T> нет.
-1. Закрытая коллекция товаров: private readonly List<Product> products = new();
-2. Открытые методы:
-Add(Product product) — не принимать null и не дублировать товары
-(сравнение по названию без учёта регистра и пробелов по краям);
-Remove(string title) — возвращать bool ;
-Find(string title) — возвращать Product? ;
-GetProducts() — возвращать копию коллекции как IReadOnlyList<Product> ;
-GetCount() — количество товаров.
-3. 1-2 приватных метода: Normalize(string title) , SameTitle(string left, string
-right) .
-
-namespace ;
-public class Catalog
-{
-private readonly List<Product> products = new();
-public void Add(Product product)
-{
-//TODO: ⚠️ Проверить product на null и на дубликат по названию ⚠️
-}
-//TODO: ⚠️ public bool Remove(string title) ⚠️
-//TODO: ⚠️ public Product? Find(string title) ⚠️
-// Возвращаем копию: снаружи нельзя изменить внутренний список
-public IReadOnlyList<Product> GetProducts() => products.ToList();
-//TODO: ⚠️ public int GetCount() ⚠️
-//TODO: ⚠️ private static string Normalize(string title) ⚠️
-//TODO: ⚠️ private static bool SameTitle(string left, string right) ⚠️
-}
-
-Marketplace.Domain
-
-Задача 4 (София):
-Участник 4 — вывод и отчёты (SRP)
-Требуется:
-}
-//TODO: ⚠️ private static string Serialize(Product product) ⚠️
-//TODO: ⚠️ private static Product Deserialize(string line) ⚠️
-}
-
-3. Формат хранения выберите сами (например, 1;Кружка;450 — по строке на товар) и
-опишите его в комментарии к классу.
-4. Не забудьте using Marketplace.Domain; — типы слоя хранения берутся из домена.
-
-1. Класс CatalogPrinter ( CatalogPrinter.cs ) — только печать:
-PrintAll(IEnumerable<Product> products) , PrintTop(IEnumerable<Product>
-products, int count) ; внутри 1-2 приватных метода подготовки строки.
-2. В том же файле — file static class PriceFormatter с методом Format(int
-price) (демонстрация файла как области видимости).
-3. Отдельный класс CatalogReport ( CatalogReport.cs ) — только расчёты:
-GetAveragePrice(IEnumerable<Product> products) и
-GetSummary(IEnumerable<Product> products) ; ни печати, ни работы с файлами.
-4. Убедиться, что ни Product , ни Catalog не занимаются печатью — это и есть SRP.
-
-using ;
-namespace ;
-public class CatalogPrinter
-{
-public void PrintAll(IEnumerable<Product> products)
-{
-//TODO: ⚠️ Напечатать все товары через PrepareLine ⚠️
-}
-public void PrintTop(IEnumerable<Product> products, int count)
-{
-//TODO: ⚠️ Напечатать count самых дорогих товаров ⚠️
-}
-//TODO: ⚠️ private string PrepareLine(Product product) ⚠️
-}
-// Виден только в этом файле Marketplace.Domain Marketplace.Presentation
-
-Вопрос для отчёта: почему PriceFormatter не виден в файле CatalogReport.cs и что
-пришлось бы сделать, если бы он понадобился в двух файлах?
-Ответ: модификатор file ограничивает тип одним файлом; для двух файлов нужен
-internal (внутри сборки) или public (для всех).
-Компоновка (задача Лидера)
-Лидер рабочей группы:
-
-Пример точки входа для компоновки:
-file static class PriceFormatter
-{
-public static string Format(int price) => $"{price} у.е.";
-}
-
-1. собирает проект: по одному типу на файл, пространства имён Marketplace.Domain ,
-Marketplace.DataAccess , Marketplace.Presentation ;
-2. пишет точку входа, где:
-создаёт 3-4 товара, в том числе с недопустимыми данными (в try/catch ) —
-чтобы показать защиту целостности;
-добавляет их в Catalog , ищет, удаляет, выводит;
-сохраняет и загружает товары через IProductRepository через интерфейс (DIP);
-печатает отчёт через CatalogPrinter и CatalogReport ;
-3. проверяет, что изменить коллекцию каталога снаружи нельзя;
-4. оформляет отчёт.
 
 
 ## Структура проекта
@@ -446,27 +269,22 @@ Marketplace.DataAccess , Marketplace.Presentation ;
 
 ### Часть Ромы Макарова
 
-Роман выполнял задачу 1 — сущность `Product` (`Product.cs`). В своей версии он закрыл поля (`private`), вынес проверки идентификатора, названия и цены в `private`-методы и добавил публичные `GetId()`, `GetTitle()`, `GetPrice()`, а также `SetPrice()` и `GetInfo()`, чтобы читать данные и использовать их при сериализации, не открывая поля. В итоговой версии `Product` сохранены `public`-геттеры `GetId()`, `GetTitle()`, `GetPrice()` и проверки в конструкторе; эти методы использует `FileProductRepository` при сохранении товаров.
+
 
 ### Часть Саши Лебедева
 
-Александр выполнял задачу 2 — класс `Catalog` (`Catalog.cs`); код был перенесён из отдельного вордовского файла. Внутренний список товаров объявлен как `private readonly`, добавление, поиск и удаление идут через `public`-методы, а `GetProducts()` возвращает `IReadOnlyList<Product>` — копию списка, поэтому снаружи нельзя обойти проверки `Add`/`Remove` и изменить коллекцию. Нормализация и сравнение названий вынесены в `private static`-методы, чтобы защита от дублей оставалась внутренней деталью реализации, а не частью публичного API.
+
 
 ### Часть Маши Титовой
 
-Мария выполняла задачу 3 — слой доступа к данным и пространства имён. Она создала `public interface IProductRepository` с методами `Save`/`Load` и `internal class FileProductRepository`: интерфейс задаёт контракт хранения, а конкретная файловая реализация скрыта внутри сборки, чтобы клиенты зависели от абстракции. В `FileProductRepository` путь хранится в `private readonly`-поле, а сериализация и десериализация вынесены в `private static`-методы. Она также перевела доменные типы в `Marketplace.Domain`, а слой хранения — в `Marketplace.DataAccess`, и использовала публичные методы `GetId()`, `GetTitle()` и `GetPrice()` из `Product` для сериализации товаров.
+
 
 ### Часть Сони Поповой (лидер группы)
 
-Я исправила загрузку товаров и сохранение цены в `decimal`, а также свела типы в пространства имён `Marketplace.*`. Я добавила `CatalogPrinter`, `CatalogReport` и сценарий каталога в `Program`: проверку некорректного товара, поиск, удаление, сохранение и загрузку через `IProductRepository`, вывод товаров и отчёты. `CatalogPrinter` и `CatalogReport` сделаны `public`, так как используются точкой входа; `Program` — `internal`, чтобы не входить в публичный API; `PriceFormatter` — `file static class`, чтобы форматирование цены было доступно только в своём файле. Также я обновила README и описала структуру проекта.
+
 
 ## Выводы
 
-`internal` в работе пригодился для `FileProductRepository`: снаружи сборки клиенты видят только `public interface IProductRepository`, поэтому файловую реализацию можно заменить, не меняя `Program`. Тот же модификатор выбран для `Program`, чтобы точка входа не входила в публичный API. Если сделать файловую реализацию `public`, клиенты начнут зависеть от конкретного класса и формата файла, и переход на другое хранилище потребует правок у них.
-
-`file` пригодился для `PriceFormatter`: он нужен только `CatalogPrinter`, поэтому `file static class` не засоряет пространство имён и не позволяет использовать форматтер из других файлов. Без этого ограничения пришлось бы либо дублировать форматирование, либо делать его публичным и раскрывать лишнюю деталь реализации.
-
-Без инкапсуляции в `Catalog` внешний код мог бы получить внутренний список и изменить его в обход `Add`/`Remove`: добавить дубли или удалить товар, не применяя проверки. `private readonly`-поле, копия в `GetProducts()` и `private static`-методы сравнения сохраняют целостность каталога, а `internal` и `file` не дают деталям реализации распространяться за пределы нужной сборки или файла. Разделение `CatalogPrinter` и `CatalogReport` дополнительно показывает SRP: печать и расчёты меняются независимо от самого каталога.
 
 ## Запуск
 
