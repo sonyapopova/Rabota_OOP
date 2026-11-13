@@ -150,8 +150,20 @@ namespace Marketplace.Presentation
                 Console.WriteLine($"SetPrice(-100) отклонён: {ex.Message}");
             }
 
-            Product infoCheck = new Product(6, "Проверка GetInfo", 50m);
+            Product infoCheck = new Product(6, "Проверка GetInfo", 20m);
+            infoCheck.Article = "ART-6";
+            infoCheck.ChangeStatus("Под заказ");
             Console.WriteLine(infoCheck.GetInfo());
+            Console.WriteLine($"Бюджетный: {infoCheck.IsBudget}, статус: {infoCheck.Status}");
+
+            try
+            {
+                infoCheck.ChangeStatus("Продано");
+            }
+            catch (ArgumentException ex)
+            {
+                Console.WriteLine($"Статус отклонён: {ex.Message}");
+            }
 
             catalog.Add(new Product(1, "Кружка", 450m));
             catalog.Add(new Product(2, "Термос", 1200m));

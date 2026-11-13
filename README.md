@@ -239,7 +239,7 @@ public class CheckoutService
 | `Channel.cs` | `public` | `Marketplace.Domain` | класс `Channel` — канал связи (телефон, email, telegram) |
 | `UserProfile.cs` | `public` | `Marketplace.Domain` | класс `UserProfile` — профиль пользователя: контакты, денежный и бонусный балансы, персональная скидка, история покупок |
 | `ProfileAdd.cs` | `public` | `Marketplace.Domain` | сервис `ProfileAdd` — создание профиля, контакты, вывод сводки и пополнение баланса |
-| `Product.cs` | `public` | `Marketplace.Domain` | класс `Product` — товар (ID, название, цена за единицу) с проверкой входных данных |
+| `Product.cs` | `public` | `Marketplace.Domain` | класс `Product` — товар (ID, название, цена за единицу, артикул, статус) с проверкой входных данных |
 | `Catalog.cs` | `public` | `Marketplace.Domain` | класс `Catalog` — каталог товаров: добавление, поиск, удаление и защита внутренней коллекции от изменения снаружи |
 | `CartItem.cs` | `public` | `Marketplace.Domain` | класс `CartItem` — позиция корзины (ID, ID товара, количество, стоимость) |
 | `ProductItem.cs` | `public` | `Marketplace.Domain` | класс `ProductItem` — сохранённая покупка (позиция и дата приобретения) |
@@ -280,6 +280,7 @@ public class CheckoutService
 11. Отклонение дубликата товара: повторное добавление «Кружки» в другом регистре выбрасывает `InvalidOperationException`.
 12. Сохранение и загрузку товара с символом `;` в названии — формат `id;title;price` разбирается от первого и последнего разделителя.
 13. Защиту коллекции: `catalog.GetProducts().Clear()` не компилируется (`CS1061`), потому что `GetProducts()` возвращает `IReadOnlyList<Product>`.
+14. Элементы `Product` из `Task1`: `Article`, `IsBudget`, `Status`, `ChangeStatus()` и перегрузку `GetInfo(bool)` — артикул, признак бюджетного товара и смену статуса с проверкой допустимых значений.
 
 ## Доказательство инкапсуляции
 
