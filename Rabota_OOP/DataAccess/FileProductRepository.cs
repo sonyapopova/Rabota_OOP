@@ -63,7 +63,7 @@ namespace Marketplace.DataAccess
         }
 
         private static string Serialize(Product product) =>
-            $"{product.GetId()};{product.GetTitle()};{product.GetPrice().ToString(CultureInfo.InvariantCulture)}";
+            $"{product.Id};{product.Title};{product.Price.ToString(CultureInfo.InvariantCulture)}";
 
         private static Product Deserialize(string line)
         {
@@ -78,9 +78,14 @@ namespace Marketplace.DataAccess
             string priceText = line[(lastSeparator + 1)..];
 
             int id = int.Parse(idText, CultureInfo.InvariantCulture);
-            decimal price = decimal.Parse(priceText, CultureInfo.InvariantCulture);
+            int price = int.Parse(priceText, CultureInfo.InvariantCulture);
 
-            return new Product(id, title, price);
+            return new Product
+            {
+                Id = id,
+                Title = title,
+                Price = price
+            };
         }
     }
 }

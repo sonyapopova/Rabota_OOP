@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using Marketplace.Domain;
@@ -19,7 +19,7 @@ namespace Marketplace.Presentation
 
             return productList.Count == 0
                 ? 0m
-                : productList.Average(product => product.GetPrice());
+                : productList.Average(product => (decimal)product.Price);
         }
 
         public string GetSummary(IEnumerable<Product> products)
@@ -32,10 +32,10 @@ namespace Marketplace.Presentation
             if (productList.Count == 0)
                 return "Товаров нет.";
 
-            decimal totalPrice = productList.Sum(product => product.GetPrice());
+            decimal totalPrice = productList.Sum(product => (decimal)product.Price);
             decimal averagePrice = GetAveragePrice(productList);
-            decimal minPrice = productList.Min(product => product.GetPrice());
-            decimal maxPrice = productList.Max(product => product.GetPrice());
+            decimal minPrice = productList.Min(product => (decimal)product.Price);
+            decimal maxPrice = productList.Max(product => (decimal)product.Price);
 
             return
                 $"Товаров: {productList.Count}; " +

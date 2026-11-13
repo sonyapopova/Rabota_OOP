@@ -5,9 +5,6 @@ using Marketplace.Domain;
 
 namespace Marketplace.Presentation
 {
-    /// <summary>
-    /// Вывод информации о товарах каталога.
-    /// </summary>
     public class CatalogPrinter
     {
         public void PrintAll(IEnumerable<Product> products)
@@ -27,7 +24,7 @@ namespace Marketplace.Presentation
             if (count <= 0)
                 return;
 
-            foreach (var product in products.OrderByDescending(p => p.GetPrice()).Take(count))
+            foreach (var product in products.OrderByDescending(p => p.Price).Take(count))
                 Console.WriteLine(PrepareLine(product));
         }
 
@@ -36,13 +33,10 @@ namespace Marketplace.Presentation
             if (product == null)
                 throw new ArgumentNullException(nameof(product));
 
-            return $"Товар №{product.GetId()}: {product.GetTitle()} — {PriceFormatter.Format(product.GetPrice())}";
+            return $"Товар №{product.Id}: {product.Title} — {PriceFormatter.Format(product.Price)}";
         }
     }
 
-    /// <summary>
-    /// Форматирование цены. Тип виден только в пределах этого файла.
-    /// </summary>
     file static class PriceFormatter
     {
         public static string Format(int price) => $"{price} котокоинов";

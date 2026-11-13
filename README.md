@@ -87,8 +87,8 @@ public string Status { get; private set; } = "В наличии";
 2. Метод ChangeStatus(string newStatus) с приватной проверкой допустимых
 значений: "В наличии" , "Нет в наличии" , "Под заказ" (список допустимых
 значений храните в приватном статическом поле).
-3. Убедиться, что product.Price = -10; и product.Status = "Продан"; не
-компилируются, а product.ChangeStatus("Продано"); выбрасывает исключение.
+3. Убедиться, что product.Status = "Продан"; не компилируется, а
+product.Price = -10; и product.ChangeStatus("Продано"); выбрасывают исключение.
 
 1. FullName — автоматическое свойство, required + init .
 2. Phone — автоматическое свойство с инициализатором string.Empty .
@@ -239,7 +239,7 @@ public class CheckoutService
 | `Channel.cs` | `public` | `Marketplace.Domain` | класс `Channel` — канал связи (телефон, email, telegram) |
 | `UserProfile.cs` | `public` | `Marketplace.Domain` | класс `UserProfile` — профиль пользователя: контакты, денежный и бонусный балансы, персональная скидка, история покупок |
 | `ProfileAdd.cs` | `public` | `Marketplace.Domain` | сервис `ProfileAdd` — создание профиля, контакты, вывод сводки и пополнение баланса |
-| `Product.cs` | `public` | `Marketplace.Domain` | класс `Product` — товар (ID, название, цена за единицу, артикул, статус) с проверкой входных данных |
+| `Product.cs` | `public` | `Marketplace.Domain` | класс `Product` — товар: обязательное `Title`, `Article`, `Price`, вычисляемое `IsBudget`, `Status`; проверки в `init` и сеттерах |
 | `Catalog.cs` | `public` | `Marketplace.Domain` | класс `Catalog` — каталог товаров: добавление, поиск, удаление и защита внутренней коллекции от изменения снаружи |
 | `CartItem.cs` | `public` | `Marketplace.Domain` | класс `CartItem` — позиция корзины (ID, ID товара, количество, стоимость) |
 | `ProductItem.cs` | `public` | `Marketplace.Domain` | класс `ProductItem` — сохранённая покупка (позиция и дата приобретения) |
@@ -280,21 +280,22 @@ public class CheckoutService
 11. Отклонение дубликата товара: повторное добавление «Кружки» в другом регистре выбрасывает `InvalidOperationException`.
 12. Сохранение и загрузку товара с символом `;` в названии — формат `id;title;price` разбирается от первого и последнего разделителя.
 13. Защиту коллекции: `catalog.GetProducts().Clear()` не компилируется (`CS1061`), потому что `GetProducts()` возвращает `IReadOnlyList<Product>`.
-14. Элементы `Product` из `Task1`: `Article`, `IsBudget`, `Status`, `ChangeStatus()` и перегрузку `GetInfo(bool)` — артикул, признак бюджетного товара и смену статуса с проверкой допустимых значений.
+14. Свойства `Product`: обязательное `Title`, `Article` с проверкой, `Price` с проверкой неотрицательности, вычисляемое `IsBudget`, `Status` с `private set`, метод `ChangeStatus()` и две перегрузки `GetInfo()`.
 
 ## Доказательство инкапсуляции
 
 Инкапсуляция — это сокрытие внутреннего состояния объекта и доступ к нему только через публичные свойства и методы, которые проверяют допустимость значений. В проекте это доказывают три вещи:
 
 1. Внутренние поля закрыты (`private`), поэтому снаружи их нельзя изменить напрямую.
-2. Изменение состояния идёт через публичный контракт: `GetId()`, `GetTitle()`, `GetPrice()`, `SetPrice()` и методы каталога.
+2. Изменение состояния идёт через публичный контракт: свойства `Id`, `Title`, `Article`, `Price`, `Status`, `IsBudget` и методы каталога.
 3. Некорректные значения не проходят: компилятор запрещает обходить проверки, а проверки выбрасывают исключения.
 
 | Проверка | Код, который не должен компилироваться | Ошибка компилятора |
 |---|---|---|
 | Закрытое поле `Product.price` | `product.price = -100;` | `CS0122: "Product.price" недоступен из-за его уровня защиты.` |
-| В `Product` нет дублирующего свойства `Price` | `product.Price = -100;` | `CS1061: "Product" не содержит определения "Price".` |
-| В `Product` нет дублирующего свойства `Id` | `product.Id = 2;` | `CS1061: "Product" не содержит определения "Id".` |
+| `Title` задаётся только при создании | `product.Title = "Другой товар";` | `CS8852: свойство "Product.Title" можно назначить только в инициализаторе объекта или в аксессоре init.` |
+| `Id` задаётся только при создании | `product.Id = 2;` | `CS8852: свойство "Product.Id" можно назначить только в инициализаторе объекта или в аксессоре init.` |
+| `Status` меняется только через `ChangeStatus()` | `product.Status = "Продан";` | `CS0272: аксессор set свойства "Product.Status" недоступен.` |
 | Закрытое поле `CustomerProfile.email` | `profile.email = "bad";` | `CS0122: "CustomerProfile.email" недоступен из-за его уровня защиты.` |
 | Закрытая коллекция `Catalog.products` | `catalog.products.Add(product);` | `CS0122: "Catalog.products" недоступен из-за его уровня защиты.` |
 | Коллекция отдаётся только для чтения | `catalog.GetProducts().Clear();` | `CS1061: "IReadOnlyList<Product>" не содержит определения "Clear".` |
@@ -305,25 +306,23 @@ public class CheckoutService
 dotnet build Rabota_OOP/Rabota_OOP.csproj -p:DefineConstants=NEGATIVE_CHECKS
 ```
 
-Проверки внутри класса:
+Проверка цены находится в сеттере свойства:
 
 ```csharp
-private decimal price;
+private int price;
 
-public decimal GetPrice() => price;
-
-public void SetPrice(int newPrice)
+public int Price
 {
-    EnsurePrice(newPrice);
-    price = newPrice;
-}
+    get => price;
+    set
+    {
+        if (value < 0)
+            throw new ArgumentOutOfRangeException(
+                nameof(value),
+                "Цена товара не может быть отрицательной.");
 
-private static void EnsurePrice(decimal price)
-{
-    if (price < 0m)
-        throw new ArgumentOutOfRangeException(
-            nameof(price),
-            "Цена товара не может быть отрицательной.");
+        price = value;
+    }
 }
 ```
 
@@ -332,8 +331,14 @@ private static void EnsurePrice(decimal price)
 ```csharp
 try
 {
-    Product product = new Product(1, "Кружка", 100m);
-    product.SetPrice(-100);
+    Product product = new Product
+    {
+        Id = 1,
+        Title = "Кружка",
+        Price = 100
+    };
+
+    product.Price = -100;
 }
 catch (ArgumentOutOfRangeException ex)
 {
@@ -344,10 +349,12 @@ catch (ArgumentOutOfRangeException ex)
 Вывод:
 
 ```text
-Цена товара не может быть отрицательной. (Parameter 'price')
+Цена товара не может быть отрицательной. (Parameter 'value')
 ```
 
-`Catalog` также не отдаёт внутренний список: поле `products` закрыто, а `GetProducts()` возвращает `IReadOnlyList<Product>`, созданный через `products.ToList()`. Поэтому снаружи нельзя добавить товар в обход `Add()` и нельзя изменить внутреннюю коллекцию через возвращённое значение.
+`Status` также защищён: снаружи свойство доступно только для чтения, а изменить его можно лишь через `ChangeStatus()`, который проверяет допустимые значения. Попытка `product.ChangeStatus("Продано")` выбрасывает `ArgumentException`.
+
+`Catalog` не отдаёт внутренний список: поле `products` закрыто, а `GetProducts()` возвращает `IReadOnlyList<Product>`, созданный через `products.ToList()`. Поэтому снаружи нельзя добавить товар в обход `Add()` и нельзя изменить внутреннюю коллекцию через возвращённое значение.
 
 ## Распределение работы
 
@@ -360,35 +367,23 @@ catch (ArgumentOutOfRangeException ex)
 
 ### Часть Маши Титовой
 
+**Часть Маши** — задача участника 1, класс `Product`. В этой части реализованы:
 
+- `Title` — обязательное автоматическое свойство (`required`, `init`);
+- `Article` — полная запись с проверкой на пустоту;
+- `Price` — `int`, полная запись с проверкой, что цена не отрицательна;
+- `IsBudget` — вычисляемое свойство (`Price < 25`);
+- `Status` — свойство с `private set`; допустимые значения хранятся в приватном статическом поле;
+- `ChangeStatus(string)` и приватная проверка `EnsureStatus(string)`;
+- две перегрузки `GetInfo()` и `GetInfo(bool)`.
+
+Дополнительно в проекте сохранено свойство `Id` (`init`): оно нужно каталогу, корзине и файловому хранилищу, хотя в листинге задания не показано.
 
 ### Часть Сони Поповой (лидер группы)
 
-В коммите Романа от 4 ноября `SetPrice()` и `GetInfo()` действительно были. При слиянии его ветки с основной версией `Product` я (лидер группы) сохранила другую реализацию: вариант Романа использовал `int price` и был несовместим с текущими `CartItem`, `Catalog`, `FileProductRepository` и `CatalogReport`. Из-за этого при разрешении конфликта методы не были перенесены в итоговый файл — это ошибка интеграции с моей стороны.
+Я отвечала за слияние `Task1` с `main`, разрешение конфликтов и проверку сборки. В текущей версии `Product` переведён на свойства из листинга: `Id`, `Title`, `Article`, `Price`, `Status`, `IsBudget`. Старые методы `GetId()`, `GetTitle()`, `GetPrice()` и `SetPrice()` удалены, чтобы не дублировать публичный API. Проверка отрицательной цены перенесена в сеттер `Price`.
 
-Сейчас я вернула в итоговый `Product.cs` методы `SetPrice(int)` и `GetInfo()`, а также добавила перегрузку `SetPrice(decimal)`, чтобы сохранить используемый в проекте `decimal`. Проверка названия и цены вынесена в приватные методы `EnsureTitle` и `EnsurePrice`.
-
-Требование «`SetPrice(-100)` бросает исключение» теперь можно показать в `Program`:
-
-```csharp
-try
-{
-    Product priceCheck = new Product(5, "Проверка цены", 100m);
-    priceCheck.SetPrice(-100);
-}
-catch (ArgumentOutOfRangeException ex)
-{
-    Console.WriteLine($"SetPrice(-100) отклонён: {ex.Message}");
-}
-```
-
-При запуске выводится:
-
-```text
-SetPrice(-100) отклонён: Цена товара не может быть отрицательной.
-```
-
-Прямое присваивание `product.Price = -100` не компилируется: в `Product` оставлен один способ доступа к цене — `GetPrice()` для чтения и `SetPrice()` для проверяемого изменения. Свойств `Id`, `Name` и `Price` больше нет, поэтому публичный API не дублируется.
+При слиянии `Task1` версия `Product` из ветки не была взята целиком, потому что она не собиралась: в ней отсутствовал конструктор с тремя параметрами и не были инициализированы поля `id` и `title`. Рабочая версия была сохранена, а из `Task1` перенесены `Article`, `IsBudget`, `Status`, `ChangeStatus()` и `GetInfo(bool)`; теперь они реализованы в виде свойств и перегрузок из листинга.
 
 
 

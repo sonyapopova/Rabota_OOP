@@ -62,8 +62,8 @@ namespace Marketplace.Presentation
             Console.WriteLine("\n=== Сценарий 1: успешная оплата ===");
 
             Cart cart = new Cart(studentProfile.User.UserId);
-            cart.Add(new CartItem(new Product(1, "Ноутбук", 1000m), 1));
-            cart.Add(new CartItem(new Product(2, "Мышь", 50m), 2));
+            cart.Add(new CartItem(new Product { Id = 1, Title = "Ноутбук", Price = 1000 }, 1));
+            cart.Add(new CartItem(new Product { Id = 2, Title = "Мышь", Price = 50 }, 2));
 
             Console.WriteLine($"Позиций в корзине: {cart.PositionsCount}, сумма: {cart.TotalPrice:F2} котокоинов");
 
@@ -84,7 +84,7 @@ namespace Marketplace.Presentation
             Console.WriteLine("\n=== Проверка владельца корзины ===");
 
             Cart foreignCart = new Cart(studentProfile.User.UserId + 1);
-            foreignCart.Add(new CartItem(new Product(4, "Наушники", 1000m), 1));
+            foreignCart.Add(new CartItem(new Product { Id = 4, Title = "Наушники", Price = 1000 }, 1));
 
             try
             {
@@ -98,7 +98,7 @@ namespace Marketplace.Presentation
             Console.WriteLine("\n=== Сценарий 2: оплата невозможна, затем пополнение и повтор ===");
 
             Cart expensiveCart = new Cart(studentProfile.User.UserId);
-            expensiveCart.Add(new CartItem(new Product(3, "Телевизор", 50000m), 1));
+            expensiveCart.Add(new CartItem(new Product { Id = 3, Title = "Телевизор", Price = 50000 }, 1));
 
             Console.WriteLine($"Корзина: товаров {expensiveCart.PositionsCount}, итоговая цена {expensiveCart.TotalPrice:F2} котокоинов");
             Console.WriteLine($"Денег на балансе: {studentProfile.MoneyBalance:F2} котокоинов, бонусов: {studentProfile.BonusBalance:F2}");
@@ -133,7 +133,7 @@ namespace Marketplace.Presentation
 
             try
             {
-                catalog.Add(new Product(4, "Некорректный товар", -5m));
+                catalog.Add(new Product { Id = 4, Title = "Некорректный товар", Price = -5 });
             }
             catch (ArgumentException ex)
             {
@@ -142,15 +142,15 @@ namespace Marketplace.Presentation
 
             try
             {
-                Product priceCheck = new Product(5, "Проверка цены", 100m);
-                priceCheck.SetPrice(-100);
+                Product priceCheck = new Product { Id = 5, Title = "Проверка цены", Price = 100 };
+                priceCheck.Price = -100;
             }
             catch (ArgumentOutOfRangeException ex)
             {
-                Console.WriteLine($"SetPrice(-100) отклонён: {ex.Message}");
+                Console.WriteLine($"Price = -100 отклонён: {ex.Message}");
             }
 
-            Product infoCheck = new Product(6, "Проверка GetInfo", 20m);
+            Product infoCheck = new Product { Id = 6, Title = "Проверка GetInfo", Price = 20 };
             infoCheck.Article = "ART-6";
             infoCheck.ChangeStatus("Под заказ");
             Console.WriteLine(infoCheck.GetInfo());
@@ -165,13 +165,13 @@ namespace Marketplace.Presentation
                 Console.WriteLine($"Статус отклонён: {ex.Message}");
             }
 
-            catalog.Add(new Product(1, "Кружка", 450m));
-            catalog.Add(new Product(2, "Термос", 1200m));
-            catalog.Add(new Product(3, "Набор стикеров", 90m));
+            catalog.Add(new Product { Id = 1, Title = "Кружка", Price = 450 });
+            catalog.Add(new Product { Id = 2, Title = "Термос", Price = 1200 });
+            catalog.Add(new Product { Id = 3, Title = "Набор стикеров", Price = 90 });
 
             try
             {
-                catalog.Add(new Product(2, "КРУЖКА", 500m));
+                catalog.Add(new Product { Id = 2, Title = "КРУЖКА", Price = 500 });
             }
             catch (InvalidOperationException ex)
             {
@@ -183,7 +183,7 @@ namespace Marketplace.Presentation
             Product? foundProduct = catalog.Find("термос");
             Console.WriteLine(foundProduct is null
                 ? "Товар «Термос» не найден."
-                : $"Найден товар: {foundProduct.GetTitle()} — {foundProduct.GetPrice():F2} котокоинов");
+                : $"Найден товар: {foundProduct.Title} — {foundProduct.Price:F2} котокоинов");
 
             bool removed = catalog.Remove("Набор стикеров");
             Console.WriteLine($"Удаление товара «Набор стикеров»: {removed}");
@@ -219,13 +219,13 @@ namespace Marketplace.Presentation
         {
             string filePath = Path.Combine(Path.GetTempPath(), "marketplace_products_semicolon.txt");
             IProductRepository repository = new FileProductRepository(filePath);
-            Product product = new Product(99, "Кружка; большая", 500m);
+            Product product = new Product { Id = 99, Title = "Кружка; большая", Price = 500 };
 
             repository.Save(new[] { product });
             List<Product> loaded = repository.Load();
 
-            Console.WriteLine(loaded.Count == 1 && loaded[0].GetTitle() == product.GetTitle()
-                ? $"\nПроверка ';' в названии: загружено «{loaded[0].GetTitle()}»"
+            Console.WriteLine(loaded.Count == 1 && loaded[0].Title == product.Title
+                ? $"\nПроверка ';' в названии: загружено «{loaded[0].Title}»"
                 : "\nПроверка ';' в названии: товар загружен неверно.");
         }
     }
