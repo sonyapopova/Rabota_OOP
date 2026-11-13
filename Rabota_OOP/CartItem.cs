@@ -1,34 +1,40 @@
 using System;
-using System.Threading;
 
-namespace Marketplace.Domain
+namespace Marketplace.Domain;
+
+/// <summary>
+/// Позиция корзины: товар, количество и цена за единицу.
+/// Данные позиции после создания не меняются, поэтому тип объявлен как readonly struct,
+/// а стоимость позиции считается вычисляемым свойством.
+/// </summary>
+public readonly struct CartItem
 {
-    /// <summary>
-    /// Товарная позиция в корзине: товар и количество единиц.
-    /// </summary>
-    public class CartItem
+    public int ProductId { get; }
+    public int Quantity { get; }
+    public int PricePerUnit { get; }
+
+    /// <summary>Стоимость позиции: цена за единицу × количество.</summary>
+    public int Total => PricePerUnit * Quantity;
+
+    public CartItem(int productId, int quantity, int pricePerUnit)
     {
-        private static int cartItemId = 0;
+        if (productId <= 0)
+            throw new ArgumentOutOfRangeException(
+                nameof(productId),
+                "Идентификатор товара должен быть положительным.");
 
-        public int Id { get; }
-        public int ProductId => Product.Id;
-        public Product Product { get; }
-        public int Quantity { get; }
-        public decimal TotalPrice => (decimal)Product.Price * Quantity;
+        if (quantity <= 0)
+            throw new ArgumentOutOfRangeException(
+                nameof(quantity),
+                "Количество должно быть больше нуля.");
 
-        public CartItem(Product product, int quantity)
-        {
-            if (product == null)
-                throw new ArgumentNullException(nameof(product));
+        if (pricePerUnit < 0)
+            throw new ArgumentOutOfRangeException(
+                nameof(pricePerUnit),
+                "Цена за единицу не может быть отрицательной.");
 
-            if (quantity <= 0)
-                throw new ArgumentOutOfRangeException(
-                    nameof(quantity),
-                    "Количество должно быть больше нуля.");
-
-            Id = Interlocked.Increment(ref cartItemId);
-            Product = product;
-            Quantity = quantity;
-        }
+        ProductId = productId;
+        Quantity = quantity;
+        PricePerUnit = pricePerUnit;
     }
 }

@@ -61,13 +61,16 @@ namespace Marketplace.Domain
 
         private decimal RecalculateTotal()
         {
-            return _items.Sum(item => item.TotalPrice);
+            return _items.Sum(item => (decimal)item.Total);
         }
 
         private static void ValidateItem(CartItem item)
         {
-            if (item == null)
-                throw new ArgumentNullException(nameof(item));
+            // CartItem — структура, поэтому проверяем не ссылку, а значения.
+            if (item.Quantity <= 0 || item.PricePerUnit < 0)
+                throw new ArgumentException(
+                    "Некорректная позиция корзины.",
+                    nameof(item));
         }
     }
 }

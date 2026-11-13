@@ -54,10 +54,10 @@ public class Product
 
     public string GetInfo(bool includeIntProperty)
     {
-        string info = $"Название: {Title}, Артикул: {Article}, Цена: {Price}";
+        string info = $"Название: {Title}, Артикул: {Article}";
 
         if (includeIntProperty)
-            info += $", Бюджетный: {(IsBudget ? "да" : "нет")}";
+            info += $", Цена: {Price}, Бюджетный: {(IsBudget ? "да" : "нет")}";
 
         return info;
     }

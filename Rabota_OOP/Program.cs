@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.IO;
 using Marketplace.DataAccess;
 using Marketplace.Domain;
+using Marketplace.Services;
 
 namespace Marketplace.Presentation
 {
@@ -17,6 +18,8 @@ namespace Marketplace.Presentation
             UserProfile studentProfile = RunProfileScenario(profileService, channels);
             RunPaymentScenarios(profileService, paymentService, studentProfile, channels);
             RunCatalogScenario();
+            RunPropertiesScenario();
+            RunCheckoutScenario();
             RunFileFormatCheck();
         }
 
@@ -62,8 +65,10 @@ namespace Marketplace.Presentation
             Console.WriteLine("\n=== Сценарий 1: успешная оплата ===");
 
             Cart cart = new Cart(studentProfile.User.UserId);
-            cart.Add(new CartItem(new Product { Id = 1, Title = "Ноутбук", Price = 1000 }, 1));
-            cart.Add(new CartItem(new Product { Id = 2, Title = "Мышь", Price = 50 }, 2));
+            Product notebook = new Product { Id = 1, Title = "Ноутбук", Price = 1000 };
+            Product mouse = new Product { Id = 2, Title = "Мышь", Price = 50 };
+            cart.Add(new CartItem(notebook.Id, 1, notebook.Price));
+            cart.Add(new CartItem(mouse.Id, 2, mouse.Price));
 
             Console.WriteLine($"Позиций в корзине: {cart.PositionsCount}, сумма: {cart.TotalPrice:F2} котокоинов");
 
@@ -84,7 +89,7 @@ namespace Marketplace.Presentation
             Console.WriteLine("\n=== Проверка владельца корзины ===");
 
             Cart foreignCart = new Cart(studentProfile.User.UserId + 1);
-            foreignCart.Add(new CartItem(new Product { Id = 4, Title = "Наушники", Price = 1000 }, 1));
+            foreignCart.Add(new CartItem(4, 1, 1000));
 
             try
             {
@@ -98,7 +103,7 @@ namespace Marketplace.Presentation
             Console.WriteLine("\n=== Сценарий 2: оплата невозможна, затем пополнение и повтор ===");
 
             Cart expensiveCart = new Cart(studentProfile.User.UserId);
-            expensiveCart.Add(new CartItem(new Product { Id = 3, Title = "Телевизор", Price = 50000 }, 1));
+            expensiveCart.Add(new CartItem(3, 1, 50000));
 
             Console.WriteLine($"Корзина: товаров {expensiveCart.PositionsCount}, итоговая цена {expensiveCart.TotalPrice:F2} котокоинов");
             Console.WriteLine($"Денег на балансе: {studentProfile.MoneyBalance:F2} котокоинов, бонусов: {studentProfile.BonusBalance:F2}");
@@ -213,6 +218,133 @@ namespace Marketplace.Presentation
 #if NEGATIVE_CHECKS
             catalog.GetProducts().Clear();
 #endif
+        }
+
+        private static void RunPropertiesScenario()
+        {
+            Console.WriteLine("\n=== Задание 4: свойства Product, CustomerProfile и Discount ===");
+
+            Product budgetProduct = new Product { Id = 7, Title = "Блокнот", Price = 20 };
+            budgetProduct.Article = "ART-7";
+            Console.WriteLine(budgetProduct.GetInfo());
+            Console.WriteLine(budgetProduct.GetInfo(false));
+
+            // Иллюстрация попытки вызвать сеттер для неизменяемого свойства:
+            // budgetProduct.Title = "Другой блокнот";  // CS8852: свойство можно назначить только в инициализаторе объекта или в аксессоре init
+            // budgetProduct.Status = "Продан";         // CS0272: аксессор set свойства "Product.Status" недоступен
+
+            try
+            {
+                budgetProduct.Article = " ";
+            }
+            catch (ArgumentException ex)
+            {
+                Console.WriteLine($"Пустой артикул отклонён: {ex.Message}");
+            }
+
+            CustomerProfile firstBuyer = new CustomerProfile
+            {
+                FullName = "Анна Петрова",
+                Phone = "+7 900 000-00-00",
+                Email = "anna@example.com",
+                Rating = 5
+            };
+
+            CustomerProfile secondBuyer = new CustomerProfile
+            {
+                FullName = "Иван Сергеев",
+                Email = "ivan@example.com",
+                Rating = 2
+            };
+
+            Console.WriteLine(firstBuyer.GetInfo());
+            Console.WriteLine(firstBuyer.GetInfo(true));
+            Console.WriteLine(firstBuyer.GetContactInfo(true));
+            Console.WriteLine($"{secondBuyer.FullName}: доверенный покупатель — {secondBuyer.IsTrusted}");
+
+            try
+            {
+                secondBuyer.Rating = 7;
+            }
+            catch (ArgumentOutOfRangeException ex)
+            {
+                Console.WriteLine($"Рейтинг 7 отклонён: {ex.Message}");
+            }
+
+            try
+            {
+                secondBuyer.Email = "ivan.example.com";
+            }
+            catch (ArgumentException ex)
+            {
+                Console.WriteLine($"Email без @ отклонён: {ex.Message}");
+            }
+
+            Discount discount = new Discount
+            {
+                Name = "Осенняя распродажа",
+                Percent = 15m,
+                MinSum = 1000,
+                ValidUntil = DateTime.Now.AddDays(7)
+            };
+
+            Console.WriteLine($"Скидка «{discount.Name}» активна: {discount.IsActive}");
+            Console.WriteLine($"Заказ на 900 котокоинов (меньше MinSum): {discount.Calculate(900)}");
+            Console.WriteLine($"Заказ на 2000 котокоинов со скидкой 15%: {discount.Calculate(2000)}");
+            Console.WriteLine($"Заказ на 2000 котокоинов со скидкой 25%: {discount.Calculate(2000, 25m)}");
+
+            try
+            {
+                discount.Percent = 120m;
+            }
+            catch (ArgumentOutOfRangeException ex)
+            {
+                Console.WriteLine($"Percent = 120 отклонён: {ex.Message}");
+            }
+        }
+
+        private static void RunCheckoutScenario()
+        {
+            Console.WriteLine("\n=== Задание 4, участник 4: readonly struct CartItem и CheckoutService ===");
+
+            List<CartItem> items = new List<CartItem>
+            {
+                new CartItem(1, 1, 1000),
+                new CartItem(2, 2, 50),
+                new CartItem(3, 3, 90)
+            };
+
+            CheckoutService checkoutService = new CheckoutService();
+
+            Console.WriteLine($"Сумма по позициям: {checkoutService.GetTotal(items)} котокоинов");
+            Console.WriteLine(checkoutService.GetReport(items));
+            Console.WriteLine(checkoutService.GetReport(items, true));
+
+            IReadOnlyList<CartItem> cheaper = checkoutService.FindCheaperThan(items, 500);
+            Console.WriteLine($"Позиций дешевле 500 котокоинов: {cheaper.Count}");
+            foreach (CartItem item in cheaper)
+                Console.WriteLine($"  Товар №{item.ProductId}: {item.PricePerUnit} котокоинов за единицу");
+
+            // Иллюстрация неизменяемости readonly struct:
+            // items[0].Quantity = 5;  // CS0200: свойство "CartItem.Quantity" доступно только для чтения
+
+            try
+            {
+                _ = new CartItem(3, 0, 90);
+            }
+            catch (ArgumentOutOfRangeException ex)
+            {
+                Console.WriteLine($"Количество 0 отклонено: {ex.Message}");
+            }
+
+            try
+            {
+                _ = new CartItem(3, 1, -10);
+            }
+            catch (ArgumentOutOfRangeException ex)
+            {
+                Console.WriteLine($"Отрицательная цена отклонена: {ex.Message}");
+            }
         }
 
         private static void RunFileFormatCheck()

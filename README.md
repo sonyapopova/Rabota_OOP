@@ -233,7 +233,7 @@ public class CheckoutService
 
 | Файл | Модификатор | Пространство имён | Назначение |
 |---|---|---|---|
-| `Program.cs` | `internal` | `Marketplace.Presentation` | точка входа: сценарии работы с профилем, успешной и неуспешной оплаты, проверка владельца корзины, работа каталога, сохранение/загрузка товаров и отчёты |
+| `Program.cs` | `internal` | `Marketplace.Presentation` | точка входа: сценарии работы с профилем, успешной и неуспешной оплаты, проверка владельца корзины, работа каталога, свойства `Product`/`CustomerProfile`/`Discount`, `CartItem` и `CheckoutService`, сохранение/загрузка товаров и отчёты |
 | `User.cs` | `public` | `Marketplace.Domain` | класс `User` — пользователь (ФИО, логин, пароль, уникальный ID) |
 | `Contact.cs` | `public` | `Marketplace.Domain` | класс `Contact` — контакт пользователя (значение + ID канала) |
 | `Channel.cs` | `public` | `Marketplace.Domain` | класс `Channel` — канал связи (телефон, email, telegram) |
@@ -241,13 +241,14 @@ public class CheckoutService
 | `ProfileAdd.cs` | `public` | `Marketplace.Domain` | сервис `ProfileAdd` — создание профиля, контакты, вывод сводки и пополнение баланса |
 | `Product.cs` | `public` | `Marketplace.Domain` | класс `Product` — товар: обязательное `Title`, `Article`, `Price`, вычисляемое `IsBudget`, `Status`; проверки в `init` и сеттерах |
 | `Catalog.cs` | `public` | `Marketplace.Domain` | класс `Catalog` — каталог товаров: добавление, поиск, удаление и защита внутренней коллекции от изменения снаружи |
-| `CartItem.cs` | `public` | `Marketplace.Domain` | класс `CartItem` — позиция корзины (ID, ID товара, количество, стоимость) |
-| `ProductItem.cs` | `public` | `Marketplace.Domain` | класс `ProductItem` — сохранённая покупка (позиция и дата приобретения) |
+| `CartItem.cs` | `public` | `Marketplace.Domain` | `public readonly struct` `CartItem` — позиция корзины: `ProductId`, `Quantity`, `PricePerUnit`, вычисляемое `Total`; проверки в конструкторе; данные после создания не меняются |
+| `ProductItem.cs` | `public` | `Marketplace.Domain` | класс `ProductItem` — сохранённая покупка: `ProductId`, `Quantity`, `PricePerUnit`, `PurchaseDate` и вычисляемое `Total` |
 | `Cart.cs` | `public` | `Marketplace.Domain` | класс `Cart` — корзина пользователя (ID, ID пользователя, список позиций `CartItem`) |
 | `CartPrice.cs` | `public` | `Marketplace.Domain` | структура `CartPrice` — расчётная цена корзины (исходная цена, множитель скидки, размер скидки) |
 | `BuyerBalance.cs` | `public` | `Marketplace.Domain` | класс `BuyerBalance` — баланс покупателя (бонусы, деньги, доля оплаты бонусами) |
 | `BuyerBalanceState.cs` | `public` | `Marketplace.Domain` | структура `BuyerBalanceState` — снимок состояния баланса покупателя |
 | `PaymentService.cs` | `public` | `Marketplace.Domain` | сервис `PaymentService` — расчёт оплаты, списание бонусов и денег, сообщения об оплате, проверка владельца корзины |
+| `Services/CheckoutService.cs` | `public` | `Marketplace.Services` | сервис `CheckoutService` — оформление заказа: `GetTotal`, `FindCheaperThan`, две перегрузки `GetReport`, приватные `IsAvailable` и `PrepareLine` |
 | `CustomerProfile.cs` | `public` | `Marketplace.Domain` | класс `CustomerProfile` — профиль покупателя: ФИО, телефон, email, рейтинг, вычисляемое свойство `IsTrusted` и перегрузки `GetInfo` |
 | `Discount.cs` | `public` | `Marketplace.Domain` | класс `Discount` — скидка: процент, минимальная сумма, срок действия и расчёт суммы со скидкой |
 | `DataAccess/IProductRepository.cs` | `public` | `Marketplace.DataAccess` | интерфейс `IProductRepository` — абстракция хранения товаров с методами `Save` и `Load` |
@@ -259,7 +260,8 @@ public class CheckoutService
 
 ### Слои приложения
 
-- `Marketplace.Domain` — доменные сущности и бизнес-правила: `Product`, `Catalog`, `Cart`, `UserProfile` и другие.
+- `Marketplace.Domain` — доменные сущности и бизнес-правила: `Product`, `Catalog`, `Cart`, `CartItem`, `UserProfile` и другие.
+- `Marketplace.Services` — сервисы приложения: `CheckoutService` считает суммы и печатает отчёты по корзине, не храня состояния.
 - `Marketplace.DataAccess` — хранение товаров через `IProductRepository`; конкретная реализация — `FileProductRepository`.
 - `Marketplace.Presentation` — точка входа `Program`, печать `CatalogPrinter` и отчёты `CatalogReport`.
 
@@ -281,6 +283,12 @@ public class CheckoutService
 12. Сохранение и загрузку товара с символом `;` в названии — формат `id;title;price` разбирается от первого и последнего разделителя.
 13. Защиту коллекции: `catalog.GetProducts().Clear()` не компилируется (`CS1061`), потому что `GetProducts()` возвращает `IReadOnlyList<Product>`.
 14. Свойства `Product`: обязательное `Title`, `Article` с проверкой, `Price` с проверкой неотрицательности, вычисляемое `IsBudget`, `Status` с `private set`, метод `ChangeStatus()` и две перегрузки `GetInfo()`.
+15. Обе перегрузки `GetInfo` для товара: `GetInfo()` выводит цену и признак бюджетного товара, `GetInfo(false)` — только название и артикул; короткая версия вызывает полную.
+16. Двух покупателей `CustomerProfile`: обязательное `FullName` (`required` + `init`), email с проверкой символа `@`, рейтинг в диапазоне `0..5`, вычисляемое `IsTrusted`, перегрузки `GetInfo` и `GetContactInfo(true)`; попытки задать рейтинг `7` и email без `@` отклоняются исключениями.
+17. Скидку `Discount`: `IsActive`, `Calculate(900)` (заказ меньше `MinSum` — скидка не применяется), `Calculate(2000)` с процентом из свойства и `Calculate(2000, 25m)` с явно заданным процентом; `Percent = 120` отклоняется проверкой.
+18. `readonly struct CartItem`: позиции с `ProductId`, `Quantity`, `PricePerUnit` и вычисляемым `Total`; конструктор отклоняет количество `0` и отрицательную цену; свойство `Quantity` нельзя изменить после создания (`CS0200`).
+19. `CheckoutService`: сумму `GetTotal`, поиск позиций дешевле заданной цены `FindCheaperThan`, короткую сводку `GetReport(items)` и подробную `GetReport(items, true)` со строками позиций.
+20. Единый публичный контракт проекта: у `Product` нет дублирующих `GetId()`/`GetTitle()`/`GetPrice()`/`SetPrice()`, данные меняются только через свойства с проверками, а после успешной оплаты история профиля пополняется записями `ProductItem`.
 
 ## Доказательство инкапсуляции
 
@@ -296,6 +304,7 @@ public class CheckoutService
 | `Title` задаётся только при создании | `product.Title = "Другой товар";` | `CS8852: свойство "Product.Title" можно назначить только в инициализаторе объекта или в аксессоре init.` |
 | `Id` задаётся только при создании | `product.Id = 2;` | `CS8852: свойство "Product.Id" можно назначить только в инициализаторе объекта или в аксессоре init.` |
 | `Status` меняется только через `ChangeStatus()` | `product.Status = "Продан";` | `CS0272: аксессор set свойства "Product.Status" недоступен.` |
+| `CartItem` — `readonly struct`, данные задаёт конструктор | `item.Quantity = 5;` | `CS0200: свойство "CartItem.Quantity" доступно только для чтения.` |
 | Закрытое поле `CustomerProfile.email` | `profile.email = "bad";` | `CS0122: "CustomerProfile.email" недоступен из-за его уровня защиты.` |
 | Закрытая коллекция `Catalog.products` | `catalog.products.Add(product);` | `CS0122: "Catalog.products" недоступен из-за его уровня защиты.` |
 | Коллекция отдаётся только для чтения | `catalog.GetProducts().Clear();` | `CS1061: "IReadOnlyList<Product>" не содержит определения "Clear".` |
@@ -358,37 +367,73 @@ catch (ArgumentOutOfRangeException ex)
 
 ## Распределение работы
 
-### Часть Ромы Макарова
+Работа над заданием шла с 11 ноября: участники подготовили свои классы отдельными коммитами, после чего лидер группы свёл их в `main` и привёл проект к требованиям задания.
 
+### Часть Ромы Макарова (участник 2)
 
-### Часть Саши Лебедева
+С 11 ноября Роман отвечает за класс `CustomerProfile` (`CustomerProfile.cs`, коммит `3fed92e`):
 
+- `FullName` — автоматическое свойство с `required` + `init`;
+- `Phone` — автосвойство с инициализатором `string.Empty`;
+- `Email` — полная запись: сеттер вызывает приватную проверку `EnsureValidEmail` (строка должна содержать `@`);
+- `Rating` — `int`, полная запись с проверкой диапазона `0..5` и резервным полем;
+- вычисляемое свойство `IsTrusted => Rating >= 4`;
+- перегрузки `GetInfo()` и `GetInfo(bool includeRating)`, метод `GetContactInfo(bool includePhone)` и приватный `NormalizePhone`.
 
+### Часть Саши Лебедева (участник 3)
 
-### Часть Маши Титовой
+11 ноября Александр добавил класс `Discount` (коммит `ac78f5e`):
 
-**Часть Маши** — задача участника 1, класс `Product`. В этой части реализованы:
+- `Name` — сокращённая запись, `required`;
+- `Percent` — `decimal`, полная запись с проверкой `0..100`;
+- `MinSum` — `int`, полная запись с проверкой `>= 0`;
+- `ValidUntil` — `DateTime` с `init` и вычисляемое `IsActive => ValidUntil > DateTime.Now`;
+- `Calculate(int total)` и перегрузка `Calculate(int total, decimal percent)`;
+- приватные `ApplyDiscount` и `EnsurePercent`.
+
+При сведении работы в `main` файл `Discount` (без расширения) был переименован в `Discount.cs`: без расширения он не попадал в сборку проекта.
+
+### Часть Маши Титовой (участник 1)
+
+11 ноября Мария прислала класс `Product` в ветке `Task1` (коммит `9f2b89d`): четыре вида свойств, две перегрузки `GetInfo` и смена статуса с проверкой допустимых значений.
+
+13 ноября её часть доведена до листинга задания и перенесена в `main`:
 
 - `Title` — обязательное автоматическое свойство (`required`, `init`);
 - `Article` — полная запись с проверкой на пустоту;
 - `Price` — `int`, полная запись с проверкой, что цена не отрицательна;
 - `IsBudget` — вычисляемое свойство (`Price < 25`);
-- `Status` — свойство с `private set`; допустимые значения хранятся в приватном статическом поле;
-- `ChangeStatus(string)` и приватная проверка `EnsureStatus(string)`;
-- две перегрузки `GetInfo()` и `GetInfo(bool)`.
+- `Status` — свойство с `private set`; допустимые значения хранятся в приватном статическом поле, менять статус можно только через `ChangeStatus()`;
+- `GetInfo()` вызывает `GetInfo(true)`, а `GetInfo(bool includeIntProperty)` выводит цену и признак бюджетного товара только при `true`.
 
-Дополнительно в проекте сохранено свойство `Id` (`init`): оно нужно каталогу, корзине и файловому хранилищу, хотя в листинге задания не показано.
+Старые методы `GetId()`, `GetTitle()`, `GetPrice()` и `SetPrice()` удалены, чтобы не дублировать публичный API: доступ к данным идёт только через свойства. Свойство `Id` (`init`) сохранено дополнительно — оно нужно каталогу, корзине и файловому хранилищу, хотя в листинге не показано.
 
-### Часть Сони Поповой (лидер группы)
+### Часть Сони Поповой (участник 4, лидер группы)
 
-Я отвечала за слияние `Task1` с `main`, разрешение конфликтов и проверку сборки. В текущей версии `Product` переведён на свойства из листинга: `Id`, `Title`, `Article`, `Price`, `Status`, `IsBudget`. Старые методы `GetId()`, `GetTitle()`, `GetPrice()` и `SetPrice()` удалены, чтобы не дублировать публичный API. Проверка отрицательной цены перенесена в сеттер `Price`.
+13 ноября София отвечала за сведение работы в `main`:
 
-При слиянии `Task1` версия `Product` из ветки не была взята целиком, потому что она не собиралась: в ней отсутствовал конструктор с тремя параметрами и не были инициализированы поля `id` и `title`. Рабочая версия была сохранена, а из `Task1` перенесены `Article`, `IsBudget`, `Status`, `ChangeStatus()` и `GetInfo(bool)`; теперь они реализованы в виде свойств и перегрузок из листинга.
+- влила `Task1` в `main` и разрешила конфликт `Product`: версия из ветки не собиралась, поэтому за основу взята рабочая версия, а из `Task1` перенесены `Article`, `IsBudget`, `Status`, `ChangeStatus()` и `GetInfo(bool)`;
+- исправила замечания преподавателя: единый публичный API без дублирования, разбор файла товаров по первому и последнему `;`, сценарии в `Program`, переименование `Discount` в `Discount.cs`;
+- дополнила README таблицей структуры проекта, доказательством инкапсуляции, описанием демонстрации и выводами.
 
+В рамках задачи участника 4 реализованы `CartItem` и `CheckoutService`:
 
+- `CartItem` стал `readonly struct`: данные задаются конструктором, есть `ProductId`, `Quantity`, `PricePerUnit` и вычисляемое `Total`; конструктор отклоняет неположительное количество и отрицательную цену;
+- `ProductItem` переработан в самостоятельный класс сохранённой покупки (`ProductId`, `Quantity`, `PricePerUnit`, `PurchaseDate`, `Total`), потому что структура не может быть базовым типом;
+- `CheckoutService` (пространство имён `Marketplace.Services`) содержит `GetTotal`, `FindCheaperThan`, две перегрузки `GetReport` и приватные `IsAvailable` и `PrepareLine`; сервис не хранит состояния и работает только с открытыми свойствами `CartItem`;
+- в `Program` добавлен сценарий, который собирает `List<CartItem>`, печатает оба отчёта, ищет позиции дешевле заданной цены и показывает исключения конструктора.
 
 ## Выводы
 
+**Когда свойство удобнее открытого поля.** Свойство сохраняет привычный синтаксис поля, но проверяет значение в момент записи: `Product.Price`, `Product.Article`, `CustomerProfile.Rating` и `CustomerProfile.Email` не принимают некорректные данные, а открытое поле приняло бы их молча. Свойство скрывает способ хранения: за `Price`, `Article` и `Rating` стоят закрытые резервные поля, поэтому внутреннее представление можно изменить, не затрагивая код снаружи. Вычисляемые свойства (`IsBudget`, `IsTrusted`, `CartItem.Total`, `Discount.IsActive`, `CartPrice.FinalPrice`) не хранят производные значения, поэтому данные не могут рассогласоваться. Связка `required` + `init` (`Product.Title`, `CustomerProfile.FullName`, `Discount.Name`) фиксирует «паспортные» данные после создания объекта, а `private set` (`Product.Status`) оставляет изменение состояния самому классу. Открытое поле уместно только для простого значения без проверок и вычислений, например во внутренней структуре данных; в публичном контракте этого проекта таких полей нет.
+
+**Когда метод удобнее свойства.** Метод нужен, когда выполняется действие или алгоритм с параметрами и возможным побочным эффектом: `ChangeStatus()` проверяет список допустимых статусов, `Discount.Calculate()` считает сумму с учётом `MinSum`, `CheckoutService.GetTotal()`, `FindCheaperThan()` и `GetReport()` работают с коллекцией, `PaymentService.PayForPurchase()` меняет балансы и очищает корзину, `User.SetPassword()` хеширует пароль. Свойство должно быть быстрым, не принимать параметров и не иметь заметных побочных эффектов; всё остальное оформляется методом. Приватные проверки `EnsureStatus`, `EnsurePercent`, `EnsureValidEmail`, `IsAvailable` и `PrepareLine` — тоже методы, потому что это операции над данными, а не сами данные.
+
+**Где перегрузка упростила вызов.** `GetInfo()` и `GetInfo(bool)`: короткая версия вызывает полную, поэтому вызывающий код не должен помнить разные имена методов. `Discount.Calculate(total)` и `Calculate(total, percent)`: одно действие либо с процентом из свойства, либо с явно заданным процентом. `CheckoutService.GetReport(items)` и `GetReport(items, includeLines)`: одна и та же сводка, при необходимости — со строками позиций. Перегрузки не дублируют код: короткая версия всегда делегирует полной, поэтому формат отчёта меняется в одном месте. При этом перегрузка по имени параметра или по типу возврата невозможна: тип возврата не входит в сигнатуру, и пара `GetInfo()`/`string GetInfo()` даёт ошибку `CS0111`.
+
+**Структура или класс.** `CartItem` — `readonly struct`: позиция корзины является небольшим значением, которое после создания не меняется, поэтому `set` в ней запрещён, данные задаёт конструктор, а `Total` вычисляется. `Product`, `CustomerProfile`, `Cart` и `UserProfile` — классы: у них есть идентичность и изменяемое состояние, и на них ссылаются другие объекты.
+
+**Итог.** В проекте присутствуют все четыре вида свойств из лабораторной: автосвойство (`Title`), полная запись с проверкой (`Price`, `Article`), вычисляемое свойство (`IsBudget`, `IsTrusted`, `Total`, `IsActive`) и свойство только для инициализации (`Id`, `ValidUntil`) вместе с обязательными (`required`) свойствами. Обе перегрузки `GetInfo` работают, недопустимые значения не попадают в объект, публичный API не дублируется, каждый тип находится в отдельном файле, а расчёты, печать и хранение разделены по слоям (`Domain`, `Services`, `DataAccess`, `Presentation`).
 
 ## Запуск
 

@@ -13,9 +13,6 @@ namespace Marketplace.Domain
             if (profile == null)
                 throw new ArgumentNullException(nameof(profile));
 
-            if (item == null)
-                throw new ArgumentNullException(nameof(item));
-
             Cart cart = new Cart(profile.User.UserId);
             cart.Add(item);
 
@@ -122,7 +119,7 @@ namespace Marketplace.Domain
 
             //Добавляем покупки в историю
             foreach (var item in cart.Items)
-                profile.AddPurchase(new ProductItem(item.Product, item.Quantity));
+                profile.AddPurchase(new ProductItem(item.ProductId, item.Quantity, item.PricePerUnit));
 
             //Опустошаем корзину: оплаченные позиции в ней больше не нужны
             cart.Clear();
