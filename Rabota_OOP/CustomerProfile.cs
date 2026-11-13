@@ -7,7 +7,7 @@ public class CustomerProfile
 
     public required string FullName { get; init; }
     
-    public string Phone { get; set; } = "";
+    public string Phone { get; set; } = string.Empty;
 
     public string Email
     {
