@@ -39,7 +39,10 @@ Marketplace.Services .
 CartItem (у CartItem меняется только вид: класс становится readonly struct ).
 
 Требуется дополнительно:
-namespace ;
+
+```csharp
+namespace Marketplace.Domain;
+
 public class Product
 {
 // 1. string — сокращённая (автоматическая) запись, обязательна при
@@ -74,8 +77,7 @@ public string Status { get; private set; } = "В наличии";
 //TODO: ⚠️ public void ChangeStatus(string newStatus) ⚠️
 //TODO: ⚠️ private static void EnsureStatus(string value) ⚠️
 }
-
-Marketplace.Domain
+```
 
 Участник 2 — класс CustomerProfile ( CustomerProfile.cs )
 Требуется:
@@ -101,7 +103,9 @@ string GetInfo(bool includeRating) ;
 string GetContactInfo(bool includePhone) .
 7. 1-2 приватных метода ( EnsureValidEmail , NormalizePhone ).
 
-namespace ;
+```csharp
+namespace Marketplace.Domain;
+
 public class CustomerProfile
 {
 public required string FullName { get; init; }
@@ -114,8 +118,7 @@ public string Phone { get; set; } = string.Empty;
 //TODO: ⚠️ private static void EnsureValidEmail(string value) ⚠️
 //TODO: ⚠️ private static string NormalizePhone(string value) ⚠️
 }
-
-Marketplace.Domain
+```
 
 Требуется:
 
@@ -133,7 +136,9 @@ IsActive — вычисляемое bool ( ValidUntil > DateTime.Now ).
 3. Перегрузка int Calculate(int total, decimal percent) .
 4. Показать, что передача недопустимых значений через свойства не проходит.
 
-namespace ;
+```csharp
+namespace Marketplace.Domain;
+
 public class Discount
 {
 public required string Name { get; init; }
@@ -147,8 +152,7 @@ public DateTime ValidUntil { get; init; }
 ⚠️
 //TODO: ⚠️ private static void EnsurePercent(decimal value) ⚠️
 }
-
-Marketplace.Domain
+```
 
 1. readonly struct CartItem — позиция корзины со свойствами:
 ProductId , Quantity , PricePerUnit — только для чтения, задаются
@@ -172,7 +176,9 @@ item) - "доступна ли позиция для покупки?" и "Под
 4. Сервис не должен обращаться к закрытым полям чужих классов — только к открытым
 свойствам и методам.
 
-namespace ;
+```csharp
+namespace Marketplace.Domain;
+
 public readonly struct CartItem
 {
 public int ProductId { get; }
@@ -181,31 +187,34 @@ public int PricePerUnit { get; }
 //TODO: ⚠️ Конструктор с проверками ⚠️
 //TODO: ⚠️ public int Total => PricePerUnit * Quantity; ⚠️
 }
+```
 
-Marketplace.Domain
+```csharp
+using System;
+using System.Collections.Generic;
 
-using ;
-namespace ;
+namespace Marketplace.Services;
+
 public class CheckoutService
 {
-public int GetTotal(IEnumerable<CartItem> items)
-{
-//TODO: ⚠️ Сумма Total по всем позициям ⚠️
-return 0;
+    public int GetTotal(IEnumerable<CartItem> items)
+    {
+        //TODO: ⚠️ Сумма Total по всем позициям ⚠️
+        return 0;
+    }
+
+    //TODO: ⚠️ public IReadOnlyList<CartItem> FindCheaperThan(...) ⚠️
+    //TODO: ⚠️ public string GetReport(IEnumerable<CartItem> items) ⚠️
+    //TODO: ⚠️ public string GetReport(IEnumerable<CartItem> items, bool includeLines) ⚠️
+    //TODO: ⚠️ private bool IsAvailable(CartItem item) ⚠️
+    //TODO: ⚠️ private string PrepareLine(CartItem item) ⚠️
 }
-Marketplace.Domain Marketplace.Services
+```
 
 Компоновка (задача Лидера)
 Лидер рабочей группы:
 
 Рекомендации по выполнению
-//TODO: ⚠️ public IReadOnlyList<CartItem> FindCheaperThan(...) ⚠️
-//TODO: ⚠️ public string GetReport(IEnumerable<CartItem> items) ⚠️
-//TODO: ⚠️ public string GetReport(IEnumerable<CartItem> items, bool
-includeLines) ⚠️
-//TODO: ⚠️ private bool IsAvailable(CartItem item) ⚠️
-//TODO: ⚠️ private string PrepareLine(CartItem item) ⚠️
-}
 
 ## Задачи были распределены между участниками следующим образом
 
@@ -222,27 +231,31 @@ includeLines) ⚠️
 
 ## Структура проекта
 
-| Файл | Пространство имён | Назначение |
-|---|---|---|
-| `Program.cs` | `Marketplace.Presentation` | точка входа: сценарии работы с профилем, успешной и неуспешной оплаты, проверка владельца корзины, работа каталога, сохранение/загрузка товаров и отчёты |
-| `User.cs` | `Marketplace.Domain` | класс `User` — пользователь (ФИО, логин, пароль, уникальный ID) |
-| `Contact.cs` | `Marketplace.Domain` | класс `Contact` — контакт пользователя (значение + ID канала) |
-| `Channel.cs` | `Marketplace.Domain` | класс `Channel` — канал связи (телефон, email, telegram) |
-| `UserProfile.cs` | `Marketplace.Domain` | класс `UserProfile` — профиль пользователя: контакты, денежный и бонусный балансы, персональная скидка, история покупок |
-| `ProfileAdd.cs` | `Marketplace.Domain` | сервис `ProfileAdd` — создание профиля, контакты, вывод сводки и пополнение баланса |
-| `Product.cs` | `Marketplace.Domain` | класс `Product` — товар (ID, название, цена за единицу) с проверкой входных данных |
-| `Catalog.cs` | `Marketplace.Domain` | класс `Catalog` — каталог товаров: добавление, поиск, удаление и защита внутренней коллекции от изменения снаружи |
-| `CartItem.cs` | `Marketplace.Domain` | класс `CartItem` — позиция корзины (ID, ID товара, количество, стоимость) |
-| `ProductItem.cs` | `Marketplace.Domain` | класс `ProductItem` — сохранённая покупка (позиция и дата приобретения) |
-| `Cart.cs` | `Marketplace.Domain` | класс `Cart` — корзина пользователя (ID, ID пользователя, список позиций `CartItem`) |
-| `CartPrice.cs` | `Marketplace.Domain` | структура `CartPrice` — расчётная цена корзины (исходная цена, множитель скидки, размер скидки) |
-| `BuyerBalance.cs` | `Marketplace.Domain` | класс `BuyerBalance` — баланс покупателя (бонусы, деньги, доля оплаты бонусами) |
-| `BuyerBalanceState.cs` | `Marketplace.Domain` | структура `BuyerBalanceState` — снимок состояния баланса покупателя |
-| `PaymentService.cs` | `Marketplace.Domain` | сервис `PaymentService` — расчёт оплаты, списание бонусов и денег, сообщения об оплате, проверка владельца корзины |
-| `DataAccess/IProductRepository.cs` | `Marketplace.DataAccess` | интерфейс `IProductRepository` — абстракция хранения товаров с методами `Save` и `Load` |
-| `DataAccess/FileProductRepository.cs` | `Marketplace.DataAccess` | `internal class FileProductRepository` — файловое хранилище товаров в формате `id;title;price` |
-| `Presentation/CatalogPrinter.cs` | `Marketplace.Presentation` | класс `CatalogPrinter` — печать всех товаров и топа по цене; в этом же файле находится `file static class PriceFormatter` |
-| `Presentation/CatalogReport.cs` | `Marketplace.Presentation` | класс `CatalogReport` — расчёты средней цены и сводки по каталогу без печати и работы с файлами |
+| Файл | Модификатор | Пространство имён | Назначение |
+|---|---|---|---|
+| `Program.cs` | `internal` | `Marketplace.Presentation` | точка входа: сценарии работы с профилем, успешной и неуспешной оплаты, проверка владельца корзины, работа каталога, сохранение/загрузка товаров и отчёты |
+| `User.cs` | `public` | `Marketplace.Domain` | класс `User` — пользователь (ФИО, логин, пароль, уникальный ID) |
+| `Contact.cs` | `public` | `Marketplace.Domain` | класс `Contact` — контакт пользователя (значение + ID канала) |
+| `Channel.cs` | `public` | `Marketplace.Domain` | класс `Channel` — канал связи (телефон, email, telegram) |
+| `UserProfile.cs` | `public` | `Marketplace.Domain` | класс `UserProfile` — профиль пользователя: контакты, денежный и бонусный балансы, персональная скидка, история покупок |
+| `ProfileAdd.cs` | `public` | `Marketplace.Domain` | сервис `ProfileAdd` — создание профиля, контакты, вывод сводки и пополнение баланса |
+| `Product.cs` | `public` | `Marketplace.Domain` | класс `Product` — товар (ID, название, цена за единицу) с проверкой входных данных |
+| `Catalog.cs` | `public` | `Marketplace.Domain` | класс `Catalog` — каталог товаров: добавление, поиск, удаление и защита внутренней коллекции от изменения снаружи |
+| `CartItem.cs` | `public` | `Marketplace.Domain` | класс `CartItem` — позиция корзины (ID, ID товара, количество, стоимость) |
+| `ProductItem.cs` | `public` | `Marketplace.Domain` | класс `ProductItem` — сохранённая покупка (позиция и дата приобретения) |
+| `Cart.cs` | `public` | `Marketplace.Domain` | класс `Cart` — корзина пользователя (ID, ID пользователя, список позиций `CartItem`) |
+| `CartPrice.cs` | `public` | `Marketplace.Domain` | структура `CartPrice` — расчётная цена корзины (исходная цена, множитель скидки, размер скидки) |
+| `BuyerBalance.cs` | `public` | `Marketplace.Domain` | класс `BuyerBalance` — баланс покупателя (бонусы, деньги, доля оплаты бонусами) |
+| `BuyerBalanceState.cs` | `public` | `Marketplace.Domain` | структура `BuyerBalanceState` — снимок состояния баланса покупателя |
+| `PaymentService.cs` | `public` | `Marketplace.Domain` | сервис `PaymentService` — расчёт оплаты, списание бонусов и денег, сообщения об оплате, проверка владельца корзины |
+| `CustomerProfile.cs` | `public` | `Marketplace.Domain` | класс `CustomerProfile` — профиль покупателя: ФИО, телефон, email, рейтинг, вычисляемое свойство `IsTrusted` и перегрузки `GetInfo` |
+| `Discount` | `public` | `Marketplace.Domain` | класс `Discount` — скидка: процент, минимальная сумма, срок действия и расчёт суммы со скидкой |
+| `DataAccess/IProductRepository.cs` | `public` | `Marketplace.DataAccess` | интерфейс `IProductRepository` — абстракция хранения товаров с методами `Save` и `Load` |
+| `DataAccess/FileProductRepository.cs` | `internal` | `Marketplace.DataAccess` | `internal class FileProductRepository` — файловое хранилище товаров в формате `id;title;price` |
+| `Presentation/CatalogPrinter.cs` | `public`; `file` | `Marketplace.Presentation` | класс `CatalogPrinter` — печать всех товаров и топа по цене; в этом же файле находится `file static class PriceFormatter` |
+| `Presentation/CatalogReport.cs` | `public` | `Marketplace.Presentation` | класс `CatalogReport` — расчёты средней цены и сводки по каталогу без печати и работы с файлами |
+
+Модификатор `public` делает тип доступным из других сборок, `internal` — только внутри текущей сборки, `file` — только в пределах одного файла.
 
 ### Слои приложения
 
@@ -279,12 +292,14 @@ includeLines) ⚠️
 
 
 ### Часть Сони Поповой (лидер группы)
-В коммите Романа от 4 ноября SetPrice() и GetInfo() действительно были. При слиянии его ветки с основной версией Product я (лидер группы) сохранила другую реализацию: вариант Романа использовал int price и не содержал свойство Price, от которого зависят CartItem, Catalog, FileProductRepository и CatalogReport. Из-за этого при разрешении конфликта методы не были перенесены в итоговый файл — это ошибка интеграции с моей стороны.
 
-Сейчас я вернула в итоговый Product.cs методы SetPrice(int) и GetInfo(), а также добавила перегрузку SetPrice(decimal), чтобы сохранить используемый в проекте decimal. Проверка названия и цены вынесена в приватные методы EnsureTitle и EnsurePrice.
+В коммите Романа от 4 ноября `SetPrice()` и `GetInfo()` действительно были. При слиянии его ветки с основной версией `Product` я (лидер группы) сохранила другую реализацию: вариант Романа использовал `int price` и не содержал свойство `Price`, от которого зависят `CartItem`, `Catalog`, `FileProductRepository` и `CatalogReport`. Из-за этого при разрешении конфликта методы не были перенесены в итоговый файл — это ошибка интеграции с моей стороны.
 
-Требование «SetPrice(-100) бросает исключение» теперь можно показать в Program:
+Сейчас я вернула в итоговый `Product.cs` методы `SetPrice(int)` и `GetInfo()`, а также добавила перегрузку `SetPrice(decimal)`, чтобы сохранить используемый в проекте `decimal`. Проверка названия и цены вынесена в приватные методы `EnsureTitle` и `EnsurePrice`.
 
+Требование «`SetPrice(-100)` бросает исключение» теперь можно показать в `Program`:
+
+```csharp
 try
 {
     Product priceCheck = new Product(5, "Проверка цены", 100m);
@@ -294,10 +309,15 @@ catch (ArgumentOutOfRangeException ex)
 {
     Console.WriteLine($"SetPrice(-100) отклонён: {ex.Message}");
 }
+```
+
 При запуске выводится:
 
+```text
 SetPrice(-100) отклонён: Цена товара не может быть отрицательной.
-Прямое присваивание product.Price = -100 не компилируется, потому что свойство Price доступно только для чтения. 
+```
+
+Прямое присваивание `product.Price = -100` не компилируется, потому что свойство `Price` доступно только для чтения.
 
 
 
