@@ -118,6 +118,16 @@ namespace Marketplace.Presentation
                 Console.WriteLine($"Данные отклонены: {ex.Message}");
             }
 
+            try
+            {
+                Product priceCheck = new Product(5, "Проверка цены", 100m);
+                priceCheck.SetPrice(-100);
+            }
+            catch (ArgumentOutOfRangeException ex)
+            {
+                Console.WriteLine($"SetPrice(-100) отклонён: {ex.Message}");
+            }
+
             catalog.Add(new Product(1, "Кружка", 450m));
             catalog.Add(new Product(2, "Термос", 1200m));
             catalog.Add(new Product(3, "Набор стикеров", 90m));

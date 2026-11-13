@@ -7,9 +7,11 @@ namespace Marketplace.Domain
     /// </summary>
     public class Product
     {
+        private decimal price;
+
         public int Id { get; }
         public string Name { get; }
-        public decimal Price { get; }
+        public decimal Price => price;
 
         public Product(int id, string name, decimal price)
         {
@@ -18,17 +20,12 @@ namespace Marketplace.Domain
                     nameof(id),
                     "Идентификатор товара должен быть положительным.");
 
-            if (string.IsNullOrWhiteSpace(name))
-                throw new ArgumentException("Название товара не может быть пустым.", nameof(name));
-
-            if (price < 0m)
-                throw new ArgumentOutOfRangeException(
-                    nameof(price),
-                    "Цена товара не может быть отрицательной.");
+            EnsureTitle(name);
+            EnsurePrice(price);
 
             Id = id;
             Name = name.Trim();
-            Price = price;
+            this.price = price;
         }
 
         public int GetId() => Id;
@@ -36,5 +33,35 @@ namespace Marketplace.Domain
         public string GetTitle() => Name;
 
         public decimal GetPrice() => Price;
+
+        public void SetPrice(int newPrice)
+        {
+            EnsurePrice(newPrice);
+            price = newPrice;
+        }
+
+        public void SetPrice(decimal newPrice)
+        {
+            EnsurePrice(newPrice);
+            price = newPrice;
+        }
+
+        public string GetInfo() => $"Товар №{Id}: {Name} — {Price:F2} котокоинов";
+
+        private static void EnsureTitle(string title)
+        {
+            if (string.IsNullOrWhiteSpace(title))
+                throw new ArgumentException(
+                    "Название товара не может быть пустым.",
+                    nameof(title));
+        }
+
+        private static void EnsurePrice(decimal price)
+        {
+            if (price < 0m)
+                throw new ArgumentOutOfRangeException(
+                    nameof(price),
+                    "Цена товара не может быть отрицательной.");
+        }
     }
 }
