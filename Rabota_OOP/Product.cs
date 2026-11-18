@@ -2,72 +2,59 @@ namespace Marketplace.Domain;
 
 public class Product
 {
-    private int id;
-    private string title;
-
-
-    // 1. string — сокращённая (автоматическая) запись, обязательна присоздании
+    public const int MaxPrice = 1_000_000;
+    private static int nextId;
+    public static int CreatedCount => nextId;
+    public static readonly DateTime CatalogStartedAt;
+    private readonly DateTime createdAt;
+    public int Id { get; }
     public required string Title { get; init; }
-    // 2. string — полная запись с проверкой на пустоту
-    private string article = string.Empty;
-    public string Article
-    {
-        get => article;
-        set
-        {
-            if (string.IsNullOrWhiteSpace(value))
-                throw new ArgumentException("Артикул обязателен",
-                nameof(value));
-            article = value;
-        }
-    }
-    // 3. int — полная запись, не допускает отрицательных значений
+    public string Article { get; set; } = string.Empty;
     private int price;
     public int Price
     {
+        //TODO: ⚠️ get и set с проверкой value < 0 || value > MaxPrice ⚠️
         get => price;
         set 
         {
-            if (value < 0) throw new ArgumentOutOfRangeException(nameof(value), "Цена на может быть отрицательной");
+            if (value < 0 || value > MaxPrice) throw new ArgumentOutOfRangeException(nameof(value), "Цена не может быть отрицательной и должна быть меньше 1000000");
             price = value;
         }
     }
-    // 4. bool — вычисляемое свойство: true, если Price < 25
-    public bool IsBudget => Price < 25;
-    // 5. Перегрузки
-    public string GetInfo() => GetInfo(true); 
-    public string GetInfo(bool includeIntProperty) 
-    {
-        var info = $"Название: {Title}, Артикул: {Article}, Цена: {Price}";
-        if (includeIntProperty)
-            info += $", Бюджетный: {(IsBudget ? "да" : "нет")}";
-        return info ;
-    }
-    // 6. Статус меняется только внутри класса
+    public DateTime CreatedAt => createdAt;
     public string Status { get; private set; } = "В наличии";
+    static Product()
+    {
+        //TODO: ⚠️ Задайте CatalogStartedAt (например, DateTime.UtcNow) ⚠️
+        CatalogStartedAt = DateTime.Now;
+    }
+    public Product()
+    {
+        //TODO: ⚠️ Id = ++nextId; createdAt = DateTime.Now; ⚠️
+        Id = ++nextId;
+        createdAt = DateTime.Now;
+    }
     private static readonly string[] AllowedStatuses =
     {
-        "В наличии", "Нет в наличии", "Под заказ"
+          "В наличии", "Нет в наличии", "Под заказ"
     };
+    //TODO: ⚠️ public void ChangeStatus(string newStatus) с приватной проверкой ⚠️
     public void ChangeStatus(string newStatus)
     {
         EnsureStatus(newStatus);
         Status = newStatus;
     }
+    //TODO: ⚠️ private static void EnsureStatus(string value) ⚠️
     private static void EnsureStatus(string value)
     {
         if (Array.IndexOf(AllowedStatuses, value) < 0)
-            throw new ArgumentException($"Недопустимый статус: {value}", nameof(value));
+        throw new ArgumentException($"Недопустимый статус: {value}", nameof(value));
     }
 
     // все что ниже чтобы не ломался fileproductrepository
+    public int GetId() => Id;
 
+    public string GetTitle() => Title;
 
-    public int GetId() => id;
-
-    public string GetTitle() => title;
-
-    public int GetPrice() => price;
-
-
+    public int GetPrice() => Price;
 }
