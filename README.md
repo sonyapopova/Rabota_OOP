@@ -486,7 +486,6 @@ catch (ArgumentOutOfRangeException ex)
 Id товаров: 1, 2, 3
 Product.CreatedCount: 3
 Product.MaxPrice: 1000000
-Product.CatalogStartedAt: 20.11.2026 18:17:42
 PriceRules.VatRate: 0,2
 PriceRules.DefaultCurrency: RUB
 WithVat(1000): 1200
