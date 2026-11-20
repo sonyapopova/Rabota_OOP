@@ -15,6 +15,7 @@ namespace Marketplace.Presentation
             PaymentService paymentService = new PaymentService();
             List<Channel> channels = CreateChannels();
 
+            RunStaticMembersScenario();
             UserProfile studentProfile = RunProfileScenario(profileService, channels);
             RunPaymentScenarios(profileService, paymentService, studentProfile, channels);
             RunCatalogScenario();
@@ -65,8 +66,8 @@ namespace Marketplace.Presentation
             Console.WriteLine("\n=== Сценарий 1: успешная оплата ===");
 
             Cart cart = new Cart(studentProfile.User.UserId);
-            Product notebook = new Product { Id = 1, Title = "Ноутбук", Price = 1000 };
-            Product mouse = new Product { Id = 2, Title = "Мышь", Price = 50 };
+            Product notebook = new Product { Title = "Ноутбук", Price = 1000 };
+            Product mouse = new Product { Title = "Мышь", Price = 50 };
             cart.Add(new CartItem(notebook.Id, 1, notebook.Price));
             cart.Add(new CartItem(mouse.Id, 2, mouse.Price));
 
@@ -138,7 +139,7 @@ namespace Marketplace.Presentation
 
             try
             {
-                catalog.Add(new Product { Id = 4, Title = "Некорректный товар", Price = -5 });
+                catalog.Add(new Product { Title = "Некорректный товар", Price = -5 });
             }
             catch (ArgumentException ex)
             {
@@ -147,7 +148,7 @@ namespace Marketplace.Presentation
 
             try
             {
-                Product priceCheck = new Product { Id = 5, Title = "Проверка цены", Price = 100 };
+                Product priceCheck = new Product { Title = "Проверка цены", Price = 100 };
                 priceCheck.Price = -100;
             }
             catch (ArgumentOutOfRangeException ex)
@@ -155,7 +156,7 @@ namespace Marketplace.Presentation
                 Console.WriteLine($"Price = -100 отклонён: {ex.Message}");
             }
 
-            Product infoCheck = new Product { Id = 6, Title = "Проверка GetInfo", Price = 20 };
+            Product infoCheck = new Product { Title = "Проверка GetInfo", Price = 20 };
             infoCheck.Article = "ART-6";
             infoCheck.ChangeStatus("Под заказ");
             Console.WriteLine(infoCheck.GetInfo());
@@ -170,13 +171,13 @@ namespace Marketplace.Presentation
                 Console.WriteLine($"Статус отклонён: {ex.Message}");
             }
 
-            catalog.Add(new Product { Id = 1, Title = "Кружка", Price = 450 });
-            catalog.Add(new Product { Id = 2, Title = "Термос", Price = 1200 });
-            catalog.Add(new Product { Id = 3, Title = "Набор стикеров", Price = 90 });
+            catalog.Add(new Product { Title = "Кружка", Price = 450 });
+            catalog.Add(new Product { Title = "Термос", Price = 1200 });
+            catalog.Add(new Product { Title = "Набор стикеров", Price = 90 });
 
             try
             {
-                catalog.Add(new Product { Id = 2, Title = "КРУЖКА", Price = 500 });
+                catalog.Add(new Product { Title = "КРУЖКА", Price = 500 });
             }
             catch (InvalidOperationException ex)
             {
@@ -224,7 +225,7 @@ namespace Marketplace.Presentation
         {
             Console.WriteLine("\n=== Задание 4: свойства Product, CustomerProfile и Discount ===");
 
-            Product budgetProduct = new Product { Id = 7, Title = "Блокнот", Price = 20 };
+            Product budgetProduct = new Product { Title = "Блокнот", Price = 20 };
             budgetProduct.Article = "ART-7";
             Console.WriteLine(budgetProduct.GetInfo());
             Console.WriteLine(budgetProduct.GetInfo(false));
@@ -258,7 +259,7 @@ namespace Marketplace.Presentation
             };
 
             Console.WriteLine(firstBuyer.GetInfo());
-            Console.WriteLine(firstBuyer.GetInfo(true));
+            Console.WriteLine(firstBuyer.GetInfo(false));
             Console.WriteLine(firstBuyer.GetContactInfo(true));
             Console.WriteLine($"{secondBuyer.FullName}: доверенный покупатель — {secondBuyer.IsTrusted}");
 
@@ -292,6 +293,17 @@ namespace Marketplace.Presentation
             Console.WriteLine($"Заказ на 900 котокоинов (меньше MinSum): {discount.Calculate(900)}");
             Console.WriteLine($"Заказ на 2000 котокоинов со скидкой 15%: {discount.Calculate(2000)}");
             Console.WriteLine($"Заказ на 2000 котокоинов со скидкой 25%: {discount.Calculate(2000, 25m)}");
+
+            Discount expiredDiscount = new Discount
+            {
+                Name = "Истёкшая скидка",
+                Percent = 15m,
+                MinSum = 1000,
+                ValidUntil = DateTime.Now.AddDays(-1)
+            };
+
+            Console.WriteLine($"Неактивная скидка: Calculate(2000) = {expiredDiscount.Calculate(2000)}, " +
+                $"Calculate(2000, 25) = {expiredDiscount.Calculate(2000, 25m)}");
 
             try
             {
@@ -330,9 +342,13 @@ namespace Marketplace.Presentation
             Console.WriteLine(checkoutService.GetReport(items, true));
 
             IReadOnlyList<CartItem> cheaper = checkoutService.FindCheaperThan(items, 500);
-            Console.WriteLine($"Позиций дешевле 500 котокоинов: {cheaper.Count}");
+            Console.WriteLine($"Позиций с общей стоимостью дешевле 500 котокоинов: {cheaper.Count}");
             foreach (CartItem item in cheaper)
-                Console.WriteLine($"  Товар №{item.ProductId}: {item.PricePerUnit} котокоинов за единицу");
+                Console.WriteLine($"  Товар №{item.ProductId}: {item.Total} котокоинов за позицию");
+
+            List<CartItem> itemsWithDefault = new List<CartItem> { items[0], default };
+            Console.WriteLine($"GetTotal с default(CartItem): {checkoutService.GetTotal(itemsWithDefault)} котокоинов");
+            Console.WriteLine(checkoutService.GetReport(itemsWithDefault));
 
             // Иллюстрация неизменяемости readonly struct:
             // items[0].Quantity = 5;  // CS0200: свойство "CartItem.Quantity" доступно только для чтения
@@ -356,11 +372,58 @@ namespace Marketplace.Presentation
             }
         }
 
+        private static void RunStaticMembersScenario()
+        {
+            Console.WriteLine("=== Задание 5: статические члены ===");
+
+            Product first = new Product { Title = "Первый товар", Price = 100 };
+            Product second = new Product { Title = "Второй товар", Price = 200 };
+            Product third = new Product { Title = "Третий товар", Price = 300 };
+
+            Console.WriteLine($"Id товаров: {first.Id}, {second.Id}, {third.Id}");
+            Console.WriteLine($"Product.CreatedCount: {Product.CreatedCount}");
+            Console.WriteLine($"Product.MaxPrice: {Product.MaxPrice}");
+            Console.WriteLine($"Product.CatalogStartedAt: {Product.CatalogStartedAt:dd.MM.yyyy HH:mm:ss}");
+            Console.WriteLine($"PriceRules.VatRate: {PriceRules.VatRate}");
+            Console.WriteLine($"PriceRules.DefaultCurrency: {PriceRules.DefaultCurrency}");
+            Console.WriteLine($"WithVat(1000): {PriceRules.WithVat(1000)}");
+            Console.WriteLine($"ApplyDiscount(1000, 10): {PriceRules.ApplyDiscount(1000, 10)}");
+
+            List<CartItem> receiptItems = new List<CartItem>
+            {
+                new CartItem(first.Id, 2, first.Price),
+                new CartItem(second.Id, 1, second.Price)
+            };
+
+            Console.WriteLine(ReceiptService.BuildReceipt(receiptItems));
+            Console.WriteLine($"OrderNumberGenerator.LastNumber: {OrderNumberGenerator.LastNumber}");
+
+            try
+            {
+                _ = PriceRules.WithVat(-1);
+            }
+            catch (ArgumentOutOfRangeException ex)
+            {
+                Console.WriteLine($"Отрицательная цена отклонена: {ex.Message}");
+            }
+
+            try
+            {
+                _ = PriceRules.ApplyDiscount(1000, 80);
+            }
+            catch (ArgumentOutOfRangeException ex)
+            {
+                Console.WriteLine($"Скидка 80% отклонена: {ex.Message}");
+            }
+
+            // new PriceRules(); // CS0712: нельзя создать экземпляр статического класса
+        }
+
         private static void RunFileFormatCheck()
         {
             string filePath = Path.Combine(Path.GetTempPath(), "marketplace_products_semicolon.txt");
             IProductRepository repository = new FileProductRepository(filePath);
-            Product product = new Product { Id = 99, Title = "Кружка; большая", Price = 500 };
+            Product product = new Product { Title = "Кружка; большая", Price = 500 };
 
             repository.Save(new[] { product });
             List<Product> loaded = repository.Load();

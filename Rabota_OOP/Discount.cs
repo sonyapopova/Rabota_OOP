@@ -26,12 +26,15 @@ public class Discount
     public bool IsActive => ValidUntil > DateTime.Now;
 
     public int Calculate(int total) =>
-        total < MinSum ? total : ApplyDiscount(total, Percent);
+        !IsActive || total < MinSum ? total : ApplyDiscount(total, Percent);
 
     public int Calculate(int total, decimal percent)
     {
         EnsurePercent(percent);
-        return ApplyDiscount(total, percent);
+
+        return !IsActive || total < MinSum
+            ? total
+            : ApplyDiscount(total, percent);
     }
 
     private static int ApplyDiscount(int total, decimal percent) =>

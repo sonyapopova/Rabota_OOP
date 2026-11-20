@@ -1,8 +1,10 @@
+using System.Linq;
+
 namespace Marketplace.Domain;
 
 public class CustomerProfile
 {
-    private string email = "";
+    private string email = string.Empty;
     private int rating;
 
     public required string FullName { get; init; }
@@ -34,10 +36,7 @@ public class CustomerProfile
 
     public bool IsTrusted => Rating >= 4;
 
-    public string GetInfo()
-    {
-        return GetInfo(false);
-    }
+    public string GetInfo() => GetInfo(true);
 
     public string GetInfo(bool includeRating)
     {
@@ -67,6 +66,14 @@ public class CustomerProfile
 
     private static string NormalizePhone(string value)
     {
-        return value.Trim();
+        string trimmed = value.Trim();
+        string digits = new(trimmed.Where(char.IsDigit).ToArray());
+
+        if (digits.Length < 7 || digits.Length > 15)
+            throw new ArgumentException(
+                "Телефон должен содержать от 7 до 15 цифр.",
+                nameof(value));
+
+        return trimmed.StartsWith('+') ? "+" + digits : digits;
     }
 }

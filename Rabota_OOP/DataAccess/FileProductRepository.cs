@@ -77,12 +77,13 @@ namespace Marketplace.DataAccess
             string title = line[(firstSeparator + 1)..lastSeparator];
             string priceText = line[(lastSeparator + 1)..];
 
-            int id = int.Parse(idText, CultureInfo.InvariantCulture);
+            // Id товара теперь выдаётся конструктором Product, поэтому сохранённый
+            // идентификатор читаем только для проверки формата строки.
+            _ = int.Parse(idText, CultureInfo.InvariantCulture);
             int price = int.Parse(priceText, CultureInfo.InvariantCulture);
 
             return new Product
             {
-                Id = id,
                 Title = title,
                 Price = price
             };

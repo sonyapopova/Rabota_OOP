@@ -20,7 +20,7 @@ public class CheckoutService
         return items.Where(IsAvailable).Sum(item => item.Total);
     }
 
-    /// <summary>Позиции, цена за единицу которых меньше заданной.</summary>
+    /// <summary>Позиции, общая стоимость которых меньше заданной.</summary>
     public IReadOnlyList<CartItem> FindCheaperThan(IEnumerable<CartItem> items, int maxPrice)
     {
         if (items == null)
@@ -33,7 +33,7 @@ public class CheckoutService
 
         return items
             .Where(IsAvailable)
-            .Where(item => item.PricePerUnit < maxPrice)
+            .Where(item => item.Total < maxPrice)
             .ToList();
     }
 
@@ -65,8 +65,9 @@ public class CheckoutService
         return report;
     }
 
-    /// <summary>Доступна ли позиция для покупки (количество задано положительным числом).</summary>
-    private bool IsAvailable(CartItem item) => item.Quantity > 0 && item.PricePerUnit >= 0;
+    /// <summary>Доступна ли позиция для покупки; отсекает и default(CartItem).</summary>
+    private bool IsAvailable(CartItem item) =>
+        item.ProductId > 0 && item.Quantity > 0 && item.PricePerUnit >= 0;
 
     /// <summary>Строка позиции для отчёта или чека.</summary>
     private string PrepareLine(CartItem item) =>
