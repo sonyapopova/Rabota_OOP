@@ -4,10 +4,18 @@ namespace Marketplace.Domain;
 
 public class Product
 {
+    public const int MaxPrice = 1_000_000;
+
+    private static int nextId;
+    private readonly DateTime createdAt;
     private int price;
     private string article = string.Empty;
 
-    public int Id { get; init; }
+    public static int CreatedCount => nextId;
+
+    public static readonly DateTime CatalogStartedAt;
+
+    public int Id { get; }
 
     public required string Title { get; init; }
 
@@ -30,14 +38,16 @@ public class Product
         get => price;
         set
         {
-            if (value < 0)
+            if (value < 0 || value > MaxPrice)
                 throw new ArgumentOutOfRangeException(
                     nameof(value),
-                    "Цена товара не может быть отрицательной.");
+                    $"Цена должна быть от 0 до {MaxPrice}.");
 
             price = value;
         }
     }
+
+    public DateTime CreatedAt => createdAt;
 
     public bool IsBudget => Price < 25;
 
@@ -49,6 +59,17 @@ public class Product
         "Нет в наличии",
         "Под заказ"
     };
+
+    static Product()
+    {
+        CatalogStartedAt = DateTime.Now;
+    }
+
+    public Product()
+    {
+        Id = ++nextId;
+        createdAt = DateTime.Now;
+    }
 
     public string GetInfo() => GetInfo(true);
 
