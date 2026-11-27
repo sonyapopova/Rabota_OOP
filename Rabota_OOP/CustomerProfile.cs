@@ -1,69 +1,75 @@
+#nullable enable
 using System.Linq;
+using CustomerId = System.Int32;
+using static Marketplace.Domain.ContactRules;
 
 namespace Marketplace.Domain;
 
 public class CustomerProfile
 {
-    private string email = string.Empty;
+    private string? email;
     private int rating;
 
+    public CustomerId Id { get; init; }
     public required string FullName { get; init; }
-    
-    public string Phone { get; set; } = string.Empty;
+    public string? MiddleName { get; set; }
+    public string? Phone { get; set; }
 
-    public string Email
+    public string? Email
     {
         get => email;
-        set
-        {
-            EnsureValidEmail(value);
-            email = value;
-        }
+        set { EnsureValidEmail(value); email = value; }
     }
 
     public int Rating
     {
         get => rating;
-        set
-        {
-            if (value < 0 || value > 5)
-            {
-                throw new ArgumentOutOfRangeException(nameof(value), "Рейтинг должен находиться в диапазоне от 0 до 5.");
-            }
-            rating = value;
-        }
+        set { EnsureRating(value); rating = value; }
     }
 
     public bool IsTrusted => Rating >= 4;
 
-    public string GetDisplayName() => FullName;
+    public string GetDisplayName() =>
+        $"{FullName} {MiddleName ?? string.Empty}".Trim();
+
+    public string GetEmail() => Email ?? UnknownEmail;
+
+    public void EnsureEmail() => Email ??= UnknownEmail;
+
+    public string TryNormalizeEmail() => NormalizeEmail(Email);
 
     public string GetInfo() => GetInfo(true);
 
     public string GetInfo(bool includeRating)
     {
-        var baseInfo = $"{FullName} ({Email})";
-        return includeRating 
-            ? $"{baseInfo} — Рейтинг: {Rating}/5" 
+        var baseInfo = $"{FullName} ({GetEmail()})";
+        return includeRating
+            ? $"{baseInfo} — Рейтинг: {Rating}/5"
             : baseInfo;
     }
 
     public string GetContactInfo(bool includePhone)
     {
         if (!includePhone || string.IsNullOrWhiteSpace(Phone))
-        {
-            return $"Email: {Email}";
-        }
+            return $"Email: {GetEmail()}";
 
-        return $"Email: {Email}, Телефон: {NormalizePhone(Phone)}";
+        return $"Email: {GetEmail()}, Телефон: {NormalizePhone(Phone)}";
     }
 
-    private static void EnsureValidEmail(string value)
+    private static void EnsureRating(int value)
     {
-        if (string.IsNullOrWhiteSpace(value) || !value.Contains('@'))
-        {
-            throw new ArgumentException("Некорректный формат email. Адрес должен содержать символ '@'.", nameof(value));
-        }
+        if (value < 0 || value > 5)
+            throw new ArgumentOutOfRangeException(
+                nameof(value), "Рейтинг должен быть от 0 до 5.");
+    }
+
+    private static void EnsureValidEmail(string? value)
+    {
+        if (string.IsNullOrEmpty(value) || value == UnknownEmail) return;
+        if (!value.Contains('@'))
+            throw new ArgumentException(
+                "Некорректный формат email. Адрес должен содержать символ '@'.",
+                nameof(value));
     }
 
     private static string NormalizePhone(string value)
