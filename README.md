@@ -718,7 +718,6 @@ DigitalProduct(null): downloadUrl
 - реализовала `OrderService` с nullable-покупателем и nullable-списком позиций: `BuildGreeting`, `GetDiscount`, `GetEmail`, `GetTotal` с null guard и `FormatOrderNumber(OrderId)`;
 - добавила в `Program` сценарий задания 6: nullable-описание, `PhysicalProduct`, `PremiumCustomer`, `OrderService`, проверки исключений и null guard;
 - влила изменения Марии из `Member-1` в `main`;
-- обновила `README`: исходный текст задания, структуру проекта, таблицу свойств, доказательство инкапсуляции, вывод программы, выводы и распределение работы.
 
 ## Выводы
 
