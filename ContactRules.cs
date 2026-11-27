@@ -1,3 +1,4 @@
+#nullable enable
 namespace Marketplace.Domain;
 
 public static class ContactRules
