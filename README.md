@@ -392,7 +392,8 @@ public class OrderService
 | `Services/OrderNumberGenerator.cs` | `public static` | `Marketplace.Services` | статический класс `OrderNumberGenerator` — закрытый счётчик `lastNumber`, статический конструктор, `LastNumber` и `Next()` |
 | `Services/ReceiptService.cs` | `public static` | `Marketplace.Services` | статический класс `ReceiptService` — `BuildReceipt` собирает чек с номером заказа, позициями и итогом с НДС; приватные `PrepareLine` и `FormatMoney` |
 | `Services/OrderService.cs` | `public` | `Marketplace.Services` | сервис `OrderService` — null-safe `BuildGreeting`, `GetDiscount`, `GetEmail`, `GetTotal` с `EnsureItems` и `FormatOrderNumber(OrderId)` |
-| `CustomerProfile.cs` | `public` | `Marketplace.Domain` | класс `CustomerProfile` — профиль покупателя: ФИО, телефон, email, рейтинг, `GetDisplayName()`, `IsTrusted`, перегрузки `GetInfo` и нормализация телефона |
+| `CustomerProfile.cs` | `public` | `Marketplace.Domain` | класс `CustomerProfile` — профиль покупателя: nullable-поля `MiddleName`, `Email`, `Phone`, псевдоним `CustomerId`, рейтинг, `GetDisplayName()`, `GetEmail()`, `EnsureEmail()` и `TryNormalizeEmail()` |
+| `ContactRules.cs` | `public static` | `Marketplace.Domain` | статические правила контактов: `UnknownEmail`, `NormalizeEmail()` и `LooksLikeEmail()` |
 | `PremiumCustomer.cs` | `public` | `Marketplace.Domain` | наследник `PremiumCustomer : CustomerProfile` — `DiscountPercent` с проверкой `0..50` и `GetPremiumInfo()` через `base.GetDisplayName()` |
 | `Discount.cs` | `public` | `Marketplace.Domain` | класс `Discount` — скидка: процент, минимальная сумма, срок действия; обе перегрузки `Calculate` учитывают `MinSum` и `IsActive` |
 | `DataAccess/IProductRepository.cs` | `public` | `Marketplace.DataAccess` | интерфейс `IProductRepository` — абстракция хранения товаров с методами `Save` и `Load` |
@@ -404,7 +405,7 @@ public class OrderService
 
 ### Слои приложения
 
-- `Marketplace.Domain` — доменные сущности и бизнес-правила: `Product`, `DigitalProduct`, `PhysicalProduct`, `Catalog`, `Cart`, `CartItem`, `CustomerProfile`, `PremiumCustomer`, `Discount`, `Money`, `PriceRules` и другие.
+- `Marketplace.Domain` — доменные сущности и бизнес-правила: `Product`, `DigitalProduct`, `PhysicalProduct`, `Catalog`, `Cart`, `CartItem`, `CustomerProfile`, `ContactRules`, `PremiumCustomer`, `Discount`, `Money`, `PriceRules` и другие.
 - `Marketplace.Services` — сервисы приложения: `CheckoutService` считает суммы, `OrderNumberGenerator` выдаёт номера, `ReceiptService` собирает чек, `OrderService` безопасно работает с nullable-покупателем и корзиной.
 - `Marketplace.DataAccess` — хранение товаров через `IProductRepository`; конкретная реализация — `FileProductRepository`.
 - `Marketplace.Presentation` — точка входа `Program`, печать `CatalogPrinter` и отчёты `CatalogReport`.
@@ -431,8 +432,10 @@ public class OrderService
 | `PhysicalProduct.WarehouseCode` | `string?` | авто, nullable | Роман Макаров |
 | `PhysicalProduct.DeliveryInfo` | `string` | вычисляемая через `??` | Роман Макаров |
 | `CustomerProfile.FullName` | `string` | авто, `required` + `init` | Роман Макаров |
-| `CustomerProfile.Phone` | `string` | авто с инициализатором `string.Empty` | Роман Макаров |
-| `CustomerProfile.Email` | `string` | полная, проверка `@` | Роман Макаров |
+| `CustomerProfile.Id` | `CustomerId` (`int`) | авто, `init` | Александр Лебедев |
+| `CustomerProfile.MiddleName` | `string?` | авто, nullable | Александр Лебедев |
+| `CustomerProfile.Phone` | `string?` | авто, nullable | Александр Лебедев |
+| `CustomerProfile.Email` | `string?` | полная, допускает `null` и `UnknownEmail`, иначе проверка `@` | Александр Лебедев |
 | `CustomerProfile.Rating` | `int` | полная, диапазон `0..5` | Роман Макаров |
 | `CustomerProfile.IsTrusted` | `bool` | вычисляемая | Роман Макаров |
 | `PremiumCustomer.DiscountPercent` | `int` | только для чтения, конструктор проверяет `0..50` | София Попова |
@@ -464,6 +467,9 @@ public class OrderService
 | `PriceRules.VatRate` | `decimal` | `const` | ставка НДС `0.2m` | Роман Макаров |
 | `PriceRules.MaxDiscountPercent` | `int` | `const` | максимальная скидка `70` | Роман Макаров |
 | `PriceRules.DefaultCurrency` | `string` | `static readonly` | валюта по умолчанию `"RUB"` | Роман Макаров |
+| `ContactRules.UnknownEmail` | `string` | `const` | запасное значение email | Александр Лебедев |
+| `ContactRules.NormalizeEmail()` | `string` | `static`-метод | нормализация email | Александр Лебедев |
+| `ContactRules.LooksLikeEmail()` | `bool` | `static`-метод | проверка наличия `@` | Александр Лебедев |
 | `OrderNumberGenerator.lastNumber` | `int` | `private static` | последний выданный номер заказа | София Попова |
 | `OrderNumberGenerator.LastNumber` | `int` | `static`, только для чтения | чтение последнего номера | София Попова |
 | `OrderNumberGenerator.Next()` | `int` | `static`-метод | выдать следующий номер | София Попова |
@@ -709,6 +715,15 @@ DigitalProduct(null): downloadUrl
 
 ### Александр Лебедев (участник 3)
 
+Александр реализовал nullable-профиль покупателя и правила контактов:
+
+- создал статический класс `ContactRules` с константой `UnknownEmail`, методами `NormalizeEmail` и `LooksLikeEmail`;
+- перевёл `CustomerProfile` на nullable-поля `MiddleName`, `Email` и `Phone`;
+- добавил псевдоним `CustomerId` и свойство `Id`;
+- подключил `#nullable enable` и статический импорт `using static Marketplace.Domain.ContactRules`;
+- реализовал `GetDisplayName()` с учётом `MiddleName`, `GetEmail()`, `EnsureEmail()` и `TryNormalizeEmail()`;
+- выделил проверки рейтинга и email в приватные методы.
+
 ### София Попова (участник 4, лидер группы)
 
 Я выполнила задачу участника 4 и свела работу группы:
@@ -718,6 +733,8 @@ DigitalProduct(null): downloadUrl
 - реализовала `OrderService` с nullable-покупателем и nullable-списком позиций: `BuildGreeting`, `GetDiscount`, `GetEmail`, `GetTotal` с null guard и `FormatOrderNumber(OrderId)`;
 - добавила в `Program` сценарий задания 6: nullable-описание, `PhysicalProduct`, `PremiumCustomer`, `OrderService`, проверки исключений и null guard;
 - влила изменения Марии из `Member-1` в `main`;
+- перенесла `ContactRules.cs` в папку проекта, чтобы файл участвовал в сборке;
+- обновила `README`: исходный текст задания, структуру проекта, таблицу свойств, доказательство инкапсуляции, вывод программы, выводы и распределение работы.
 
 ## Выводы
 
