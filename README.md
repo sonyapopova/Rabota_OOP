@@ -686,48 +686,39 @@ DigitalProduct(null): downloadUrl
 
 ## Распределение работы
 
-Ниже — работа, выполненная в рамках заданий 5–6. Я, как лидер группы, свела результаты в `main`, проверила сборку и оформила отчёт.
+Ниже — работа, выполненная в рамках задания 6. Я, как лидер группы, свела результаты в `main`, проверила сборку и оформила отчёт.
 
 ### Мария Титова (участник 1)
 
-Мария подготовила статические члены `Product` и наследника `DigitalProduct`:
+Мария обновила базовый `Product` и подготовила наследника `DigitalProduct`:
 
-- `MaxPrice` — `const int` с ограничением `1_000_000`;
-- закрытый статический счётчик `nextId` и свойство `CreatedCount` только для чтения;
-- `static readonly CatalogStartedAt`, который заполняется в статическом конструкторе;
-- `readonly`-поле `createdAt` и свойство `CreatedAt`;
-- `Id` только для чтения, задаётся в конструкторе;
-- псевдоним `ProductId`, nullable-свойство `Description` и метод `GetDescription()`;
-- наследник `DigitalProduct : Product` с `DownloadUrl`, `FileSizeMb`, null guard и `GetFullInfo()`, использующим `base.GetDescription()`.
+- добавила псевдоним `ProductId` для идентификатора товара;
+- добавила nullable-свойство `Description` и метод `GetDescription()`;
+- создала `DigitalProduct : Product` с `DownloadUrl`, `FileSizeMb`, null guard в конструкторе и `GetFullInfo()`, использующим `base.GetDescription()`.
 
-Я влила изменения Марии из веток `Task1` и `Member-1` в `main` и сохранила рабочую версию свойств и статических членов.
+Я влила изменения Марии из ветки `Member-1` в `main` и сохранила общий контракт `Product`.
 
 ### Роман Макаров (участник 2)
 
-Роман реализовал статический класс `PriceRules` и наследника `PhysicalProduct`:
+Роман реализовал наследника `PhysicalProduct : Product`:
 
-- `const decimal VatRate = 0.2m`;
-- `const int MaxDiscountPercent = 70`;
-- `static readonly string DefaultCurrency = "RUB"`;
-- статические методы `WithVat` и `ApplyDiscount`;
-- приватные проверки `EnsurePrice` и `EnsurePercent`;
-- наследник `PhysicalProduct : Product` с `WeightKg`, nullable `WarehouseCode`, безопасным `DeliveryInfo` и приватной проверкой веса.
-
-Класс `PriceRules` полностью статический: создать его экземпляр через `new` нельзя, а все расчёты выполняются через имя класса.
+- добавил свойства `WeightKg` и nullable `WarehouseCode`;
+- реализовал `DeliveryInfo` через `??`;
+- добавил приватную проверку веса `EnsureWeight`;
+- реализовал `GetFullInfo()` с использованием `base.GetDescription()`.
 
 ### Александр Лебедев (участник 3)
 
 ### София Попова (участник 4, лидер группы)
 
-Я выполнила задачи участника 4 для заданий 5–6 и свела работу группы:
+Я выполнила задачу участника 4 и свела работу группы:
 
-- реализовала статические классы `OrderNumberGenerator` и `ReceiptService`: генератор выдаёт номера начиная с 1001, а чек содержит номер заказа, позиции и итог с НДС;
-- добавила в `Program` сценарий статических членов, печать чека и проверки `PriceRules`;
 - реализовала `PremiumCustomer : CustomerProfile` с проверкой скидки `0..50` и `GetPremiumInfo()`, использующим `base.GetDisplayName()`;
+- добавила в `CustomerProfile` метод `GetDisplayName()` для интеграции наследника;
 - реализовала `OrderService` с nullable-покупателем и nullable-списком позиций: `BuildGreeting`, `GetDiscount`, `GetEmail`, `GetTotal` с null guard и `FormatOrderNumber(OrderId)`;
 - добавила в `Program` сценарий задания 6: nullable-описание, `PhysicalProduct`, `PremiumCustomer`, `OrderService`, проверки исключений и null guard;
-- исправила замечания преподавателя: `CustomerProfile.GetInfo()` вызывает полную перегрузку, `NormalizePhone` нормализует номер, обе перегрузки `Discount.Calculate` учитывают `IsActive` и `MinSum`, `FindCheaperThan` сравнивает `Total`, а `CheckoutService` отсекает `default(CartItem)`;
-- обновила `README`: исходный текст задания, структуру проекта, таблицы свойств и статических членов, доказательство инкапсуляции, вывод программы и выводы.
+- влила изменения Марии из `Member-1` в `main`;
+- обновила `README`: исходный текст задания, структуру проекта, таблицу свойств, доказательство инкапсуляции, вывод программы, выводы и распределение работы.
 
 ## Выводы
 
