@@ -36,6 +36,8 @@ public class CustomerProfile
 
     public bool IsTrusted => Rating >= 4;
 
+    public string GetDisplayName() => FullName;
+
     public string GetInfo() => GetInfo(true);
 
     public string GetInfo(bool includeRating)

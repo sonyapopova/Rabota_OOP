@@ -22,6 +22,7 @@ namespace Marketplace.Presentation
             RunPropertiesScenario();
             RunCheckoutScenario();
             RunFileFormatCheck();
+            RunTask6Scenario();
         }
 
         private static List<Channel> CreateChannels()
@@ -431,6 +432,78 @@ namespace Marketplace.Presentation
             Console.WriteLine(loaded.Count == 1 && loaded[0].Title == product.Title
                 ? $"\nПроверка ';' в названии: загружено «{loaded[0].Title}»"
                 : "\nПроверка ';' в названии: товар загружен неверно.");
+        }
+
+        private static void RunTask6Scenario()
+        {
+            Console.WriteLine("\n=== Задание 6: null, наследование и псевдонимы ===");
+
+            Product baseProduct = new Product
+            {
+                Title = "Базовый товар",
+                Description = null
+            };
+
+            PhysicalProduct table = new PhysicalProduct(12.5, null)
+            {
+                Title = "Стол",
+                Description = null
+            };
+
+            Console.WriteLine($"Product.CreatedCount: {Product.CreatedCount}");
+            Console.WriteLine($"Id: {baseProduct.Id}, {table.Id}");
+            Console.WriteLine($"Описание: {baseProduct.GetDescription()}");
+            Console.WriteLine($"Склад: {table.DeliveryInfo}");
+            Console.WriteLine(table.GetFullInfo());
+
+            CustomerProfile regular = new CustomerProfile
+            {
+                FullName = "Анна",
+                Email = "anna@example.com"
+            };
+
+            PremiumCustomer premium = new PremiumCustomer(10)
+            {
+                FullName = "Иван",
+                Email = "ivan@example.com"
+            };
+
+            OrderService orderService = new OrderService();
+
+            Console.WriteLine($"Профиль: {regular.GetDisplayName()}");
+            Console.WriteLine($"Приветствие: {orderService.BuildGreeting(null)}");
+            Console.WriteLine($"Email: {orderService.GetEmail(null)}");
+            Console.WriteLine($"Скидка: {orderService.GetDiscount(premium)}");
+            Console.WriteLine($"Premium: {premium.GetPremiumInfo()}");
+            Console.WriteLine(orderService.FormatOrderNumber(42));
+            Console.WriteLine($"Сумма: {orderService.GetTotal(new[] { new CartItem(1, 2, 100) })}");
+
+            try
+            {
+                orderService.GetTotal(null);
+            }
+            catch (ArgumentNullException ex)
+            {
+                Console.WriteLine($"GetTotal(null): {ex.ParamName}");
+            }
+
+            try
+            {
+                _ = new PremiumCustomer(60) { FullName = "Тест" };
+            }
+            catch (ArgumentOutOfRangeException ex)
+            {
+                Console.WriteLine($"Скидка 60% отклонена: {ex.Message}");
+            }
+
+            try
+            {
+                _ = new DigitalProduct(null!, 12) { Title = "Книга" };
+            }
+            catch (ArgumentNullException ex)
+            {
+                Console.WriteLine($"DigitalProduct(null): {ex.ParamName}");
+            }
         }
     }
 }
