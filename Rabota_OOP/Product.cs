@@ -1,5 +1,5 @@
 using System;
-
+using ProductId = System.Int32;
 namespace Marketplace.Domain;
 
 public class Product
@@ -10,14 +10,12 @@ public class Product
     private readonly DateTime createdAt;
     private int price;
     private string article = string.Empty;
-
     public static int CreatedCount => nextId;
-
     public static readonly DateTime CatalogStartedAt;
-
-    public int Id { get; }
-
+    public ProductId Id { get; }
     public required string Title { get; init; }
+
+    public string? Description { get; set; }
 
     public string Article
     {
@@ -52,6 +50,11 @@ public class Product
     public bool IsBudget => Price < 25;
 
     public string Status { get; private set; } = "В наличии";
+
+    public string GetDescription()
+    {
+        return Description ?? "Описание не указано";
+    }
 
     private static readonly string[] AllowedStatuses =
     {
